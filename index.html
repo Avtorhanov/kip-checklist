@@ -4,13 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#f4f5f7">
+<meta name="theme-color" content="#f5f7fa">
 <title>КИП — чек-лист</title>
 <style>
 :root{
   --fontScale:1;
-  --bg:#f4f5f7; --card:#fff; --text:#111827; --muted:#6b7280;
-  --line:#e5e7eb; --accent:#1769e0; --danger:#d92d20; --soft:#eef4ff;
+  --bg:#f5f7fa; --card:#fff; --text:#172033; --muted:#687386;
+  --line:#e2e7ef; --accent:#1769e0; --accent-strong:#1055bb; --danger:#c9332c;
+  --soft:#edf4ff; --soft-success:#eef8f1; --shadow:0 3px 12px rgba(31,49,76,.08);
+  --shadow-raised:0 8px 22px rgba(27,48,80,.16);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{
@@ -18,38 +20,38 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
   font-size:calc(16px * var(--fontScale));
 }
-button,input,select{font:inherit}
+button,input,select,textarea{font:inherit}
 button{border:0}
-.app{max-width:760px;margin:0 auto;padding:12px 12px 150px}
+.app{max-width:760px;margin:0 auto;padding:calc(10px + env(safe-area-inset-top)) 12px 158px}
 .top{
-  position:sticky;top:0;z-index:10;background:rgba(244,245,247,.96);
-  backdrop-filter:blur(12px);padding:4px 0 10px;
+  position:sticky;top:0;z-index:10;background:var(--bg);padding:5px 0 10px;
+  border-bottom:1px solid rgba(226,231,239,.9);
 }
-.titleRow{display:flex;align-items:center;gap:7px;margin:4px 0 8px}
-h1{font-size:calc(22px * var(--fontScale));margin:0;min-width:0;flex:1;overflow-wrap:anywhere}
-.titleEdit{flex:0 0 auto;min-width:38px;height:38px;border-radius:10px;background:#fff;border:1px solid var(--line);cursor:pointer}
-h1.editing{background:#fff;border:1px dashed #1769e0;border-radius:9px;padding:5px 7px;outline:none}
-.sub{color:var(--muted);font-size:calc(13px * var(--fontScale));margin-bottom:10px}
+.titleRow{display:flex;align-items:center;gap:8px;margin:5px 0 2px}
+h1{font-size:calc(23px * var(--fontScale));letter-spacing:-.35px;margin:0;min-width:0;flex:1;overflow-wrap:anywhere}
+.titleEdit{flex:0 0 auto;min-width:40px;height:40px;border-radius:12px;background:#fff;border:1px solid var(--line);box-shadow:0 1px 3px rgba(30,41,59,.04);cursor:pointer}
+h1.editing{background:#fff;border:1px dashed var(--accent);border-radius:10px;padding:5px 7px;outline:none}
+.sub{color:var(--muted);font-size:calc(12px * var(--fontScale));margin:0 0 11px}
 .controls{display:flex;gap:7px;align-items:center}
 .search{
-  flex:1;min-width:0;border:1px solid var(--line);background:#fff;border-radius:12px;
-  padding:10px 12px;outline:none;
+  flex:1;min-width:0;border:1px solid var(--line);background:#fff;border-radius:13px;
+  padding:10px 12px;outline:none;box-shadow:0 1px 3px rgba(30,41,59,.03);
 }
 .smallbtn{
   min-width:42px;height:42px;border-radius:12px;background:#fff;border:1px solid var(--line);
-  color:var(--text);font-weight:700;cursor:pointer;
+  color:var(--text);font-weight:700;cursor:pointer;box-shadow:0 1px 3px rgba(30,41,59,.03);
 }
 
 .savebtn{font-size:19px}
-.addChoice{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 14px}
+.addChoice{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:4px 0 14px}
 .choice{
-  background:#f4f5f7;border:1px solid var(--line);border-radius:14px;
-  padding:14px 10px;text-align:center;cursor:pointer;font-weight:700;
+  background:#f7f9fc;border:1px solid var(--line);border-radius:14px;
+  padding:13px 10px;text-align:center;cursor:pointer;font-weight:700;
 }
 .choice .ico{display:block;font-size:25px;margin-bottom:5px}
-.choice.active{background:var(--soft);border-color:#9bbcff}
+.choice.active{background:var(--soft);border-color:#9bbcff;color:var(--accent-strong)}
 .savePath{
-  border:1px solid var(--line);border-radius:12px;background:#f8fafc;
+  border:1px solid var(--line);border-radius:12px;background:#f7f9fc;
   padding:10px 11px;margin-bottom:10px;font-size:calc(12px * var(--fontScale));
 }
 .savePath strong{display:block;color:#374151;margin-bottom:3px}
@@ -58,12 +60,12 @@ h1.editing{background:#fff;border:1px dashed #1769e0;border-radius:9px;padding:5
 .ocrProgress{
   height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:8px 0;
 }
-.ocrBar{height:100%;width:0;background:#1769e0;transition:width .15s}
+.ocrBar{height:100%;width:0;background:var(--accent);transition:width .18s ease}
 .ocrTools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .ocrWarn{padding:9px 10px;border-radius:10px;background:#fff8e1;border:1px solid #f2d48a;color:#6b4f00;margin-top:8px}
 .importList{display:grid;gap:6px;max-height:45vh;overflow:auto;margin:10px 0}
 .importItem{
-  background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:7px;
+  background:#f7f9fc;border:1px solid var(--line);border-radius:10px;padding:7px;
 }
 .importItem > label{
   display:grid !important;grid-template-columns:30px minmax(0,1fr) 110px;gap:8px;align-items:center;width:100%;
@@ -76,15 +78,15 @@ h1.editing{background:#fff;border:1px dashed #1769e0;border-radius:9px;padding:5
 .dangerText{color:var(--danger)}
 
 .tabs{
-  display:flex;gap:7px;overflow-x:auto;padding:7px 0 4px;
+  display:flex;gap:7px;overflow-x:auto;padding:10px 0 5px;
   scrollbar-width:none;
 }
 .tabs::-webkit-scrollbar{display:none}
 .tab{
   flex:0 0 auto;background:#fff;border:1px solid var(--line);border-radius:999px;
-  padding:8px 12px;cursor:pointer;color:#374151;white-space:nowrap;
+  padding:8px 12px;cursor:pointer;color:#4b5563;white-space:nowrap;font-weight:600;font-size:calc(13px * var(--fontScale));
 }
-.tab.active{background:#111827;color:#fff;border-color:#111827}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 7px rgba(23,105,224,.22)}
 .stats{
   display:flex;gap:8px;margin:6px 0 10px;flex-wrap:wrap;
 }
@@ -92,16 +94,24 @@ h1.editing{background:#fff;border:1px dashed #1769e0;border-radius:9px;padding:5
   background:#fff;border:1px solid var(--line);border-radius:10px;padding:7px 10px;
   color:#4b5563;font-size:calc(13px * var(--fontScale));
 }
-.list{display:grid;gap:7px}
+.summaryCard{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:11px 12px;margin:7px 0 10px;box-shadow:var(--shadow)}
+.summaryHead{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.summaryKicker{display:block;color:var(--muted);font-size:calc(12px * var(--fontScale));margin-bottom:1px}
+.summaryCount{font-size:calc(15px * var(--fontScale));font-weight:750;letter-spacing:-.1px}
+.summaryPercent{color:var(--accent-strong);font-size:calc(19px * var(--fontScale));font-weight:800;letter-spacing:-.5px}
+.progressTrack{height:8px;background:#e6ebf2;border-radius:999px;overflow:hidden;margin:9px 0 7px}
+.progressFill{display:block;height:100%;width:0;background:var(--accent);border-radius:inherit;transition:width .22s ease}
+.summaryFoot{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:calc(12px * var(--fontScale))}
+.list{display:grid;gap:8px}
 .row{
   display:flex;align-items:center;gap:10px;background:var(--card);
-  border:1px solid var(--line);border-radius:13px;padding:7px 10px;
-  min-height:52px;user-select:none;touch-action:pan-y;
+  border:1px solid var(--line);border-radius:14px;padding:7px 10px;
+  min-height:52px;user-select:none;touch-action:pan-y;box-shadow:0 2px 7px rgba(31,49,76,.055);
 }
-.row.done{background:#f8fafc}
+.row.done{background:var(--soft-success);border-color:#d8eadf}
 .check{
-  width:27px;height:27px;flex:0 0 27px;border-radius:8px;
-  border:2px solid #9ca3af;background:#fff;display:grid;place-items:center;
+  width:28px;height:28px;flex:0 0 28px;border-radius:9px;
+  border:2px solid #98a3b4;background:#fff;display:grid;place-items:center;
   cursor:pointer;position:relative;
 }
 .check.on{background:var(--accent);border-color:var(--accent)}
@@ -115,25 +125,25 @@ h1.editing{background:#fff;border:1px dashed #1769e0;border-radius:9px;padding:5
 .unit{color:var(--muted);font-size:calc(12px * var(--fontScale));margin-top:2px}
 .row.done .tag{color:#6b7280;text-decoration:line-through}
 .taskDetails{margin-top:7px}
-.taskDetails summary{display:inline-flex;align-items:center;gap:5px;cursor:pointer;color:#1769e0;font-size:calc(12px * var(--fontScale));font-weight:700;list-style:none;user-select:none}
+.taskDetails summary{display:inline-flex;align-items:center;gap:5px;cursor:pointer;color:var(--accent);font-size:calc(12px * var(--fontScale));font-weight:700;list-style:none;user-select:none}
 .taskDetails summary::-webkit-details-marker{display:none}
 .taskDetails summary::before{content:"▾";font-size:11px;transition:transform .15s}
 .taskDetails[open] summary::before{transform:rotate(180deg)}
-.taskBox{margin-top:6px;padding:8px;background:#f8fafc;border:1px solid var(--line);border-radius:10px}
+.taskBox{margin-top:6px;padding:8px;background:#f7f9fc;border:1px solid var(--line);border-radius:10px}
 .taskBox textarea{width:100%;min-height:54px;resize:vertical;border:1px solid #d1d5db;border-radius:8px;padding:8px;background:#fff;outline:none;font:inherit;font-size:calc(13px * var(--fontScale))}
-.taskSave{margin-top:6px;padding:7px 10px;border-radius:8px;background:#111827;color:#fff;font-size:calc(12px * var(--fontScale));font-weight:700;cursor:pointer}
+.taskSave{margin-top:6px;padding:7px 10px;border-radius:8px;background:#1f2937;color:#fff;font-size:calc(12px * var(--fontScale));font-weight:700;cursor:pointer}
 .longhint{font-size:calc(11px * var(--fontScale));color:#9ca3af}
 .empty{
   text-align:center;color:var(--muted);background:#fff;border:1px dashed var(--line);
-  border-radius:14px;padding:24px 12px;
+  border-radius:14px;padding:28px 12px;
 }
 .fab{
   position:fixed;z-index:20;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));
-  width:58px;height:58px;border-radius:50%;background:#111827;color:#fff;
-  font-size:30px;line-height:1;box-shadow:0 8px 24px rgba(0,0,0,.22);cursor:pointer;
+  width:58px;height:58px;border-radius:18px;background:var(--accent);color:#fff;
+  font-size:30px;line-height:1;box-shadow:var(--shadow-raised);cursor:pointer;
 }
-.footer{position:fixed;z-index:19;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:rgba(244,245,247,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
-.reset{color:#6b7280;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 16px;cursor:pointer;font-size:calc(12px * var(--fontScale));font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.footer{position:fixed;z-index:19;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:7px;padding:8px 88px calc(8px + env(safe-area-inset-bottom)) 12px;background:var(--bg);border-top:1px solid var(--line)}
+.reset{flex:1;min-width:0;color:#8b3b37;background:#fff;border:1px solid #f0cfcc;border-radius:12px;padding:10px 6px;cursor:pointer;font-size:calc(11px * var(--fontScale));font-weight:750;box-shadow:0 2px 8px rgba(76,31,31,.05)}
 .overlay{
   display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.42);
   align-items:flex-end;justify-content:center;
@@ -141,28 +151,68 @@ h1.editing{background:#fff;border:1px dashed #1769e0;border-radius:9px;padding:5
 .overlay.show{display:flex}
 .sheet{
   width:min(760px,100%);background:#fff;border-radius:20px 20px 0 0;
-  padding:18px 16px calc(18px + env(safe-area-inset-bottom));
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -10px 30px rgba(23,32,51,.16);
 }
 .sheet h2{margin:0 0 14px;font-size:calc(19px * var(--fontScale))}
 .field{margin-bottom:12px}
 .field label{display:block;color:#4b5563;font-size:calc(12px * var(--fontScale));margin:0 0 5px}
 .field input,.field select{
-  width:100%;border:1px solid #d1d5db;border-radius:11px;padding:11px 12px;
+  width:100%;border:1px solid #cfd7e3;border-radius:11px;padding:11px 12px;
   outline:none;background:#fff;
 }
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
 .action{
-  padding:12px;border-radius:12px;background:#eef0f3;cursor:pointer;font-weight:700;
+  padding:12px;border-radius:12px;background:#eef1f5;cursor:pointer;font-weight:700;color:var(--text);
 }
-.action.primary{background:#111827;color:#fff}
+.action.primary{background:var(--accent);color:#fff}
 .action.delete{background:#fff0ef;color:var(--danger);border:1px solid #ffd3cf}
-.closex{float:right;background:#f1f2f4;border-radius:50%;width:34px;height:34px;cursor:pointer}
+.closex{float:right;background:#f0f3f7;border-radius:11px;width:34px;height:34px;cursor:pointer;color:var(--text);font-size:20px}
 .toast{
   position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(12px);
   opacity:0;pointer-events:none;background:#111827;color:#fff;border-radius:10px;
   padding:9px 13px;font-size:13px;transition:.18s;z-index:80;
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+button,.search,.field input,.field select,.taskBox textarea,.tab,.choice,.row,.titleEdit{
+  transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease,background-color .14s ease;
+}
+button:active,.choice:active,.tab:active{transform:scale(.97)}
+.row:active{transform:scale(.995)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{
+  outline:3px solid rgba(23,105,224,.24);outline-offset:2px;
+}
+@media (hover:hover){.row:hover{border-color:#cfd9e8;box-shadow:0 4px 12px rgba(31,49,76,.09)}.smallbtn:hover,.titleEdit:hover{border-color:#c8d5e7}.tab:not(.active):hover,.choice:hover{background:#f3f7fc}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+.utilityRow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:7px}
+.utilityBtn{min-height:38px;padding:7px 5px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--text);font-size:calc(11px * var(--fontScale));font-weight:750;cursor:pointer;box-shadow:0 1px 3px rgba(30,41,59,.03)}
+.pageBar{display:flex;align-items:center;gap:7px;margin-top:9px}
+.pageStrip{display:flex;gap:7px;overflow-x:auto;flex:1;padding:1px 0 3px;scrollbar-width:none}
+.pageStrip::-webkit-scrollbar{display:none}
+.pageChip{display:flex;align-items:center;gap:6px;flex:0 0 auto;max-width:180px;min-height:36px;padding:7px 10px;background:#fff;color:#4b5563;border:1px solid var(--line);border-radius:11px;cursor:pointer;font-size:calc(12px * var(--fontScale));font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pageChip.active{background:var(--soft);color:var(--accent-strong);border-color:#9bbcff}
+.pageCount{color:var(--muted);font-size:calc(10px * var(--fontScale));font-weight:700}
+.pageAction{flex:0 0 auto;min-height:36px;padding:7px 9px;background:#fff;color:var(--accent-strong);border:1px solid #bfd3f5;border-radius:11px;font-size:calc(11px * var(--fontScale));font-weight:800;cursor:pointer}
+.secondary{padding:9px 11px;border:1px solid var(--line);background:#f7f9fc;color:var(--text);border-radius:10px;font-size:calc(12px * var(--fontScale));font-weight:700;cursor:pointer}
+.fileSourceHint{padding:10px 11px;background:#f7f9fc;border:1px solid var(--line);border-radius:11px;line-height:1.4}
+.themeGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.themeOption{display:flex;align-items:center;gap:9px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text);font-weight:750;cursor:pointer;text-align:left}
+.themeOption.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(23,105,224,.14)}
+.themeSwatch{width:28px;height:28px;border-radius:9px;flex:0 0 28px;border:1px solid rgba(255,255,255,.3)}
+.themeSwatch.light{background:linear-gradient(135deg,#f7f9fc 0 50%,#fff 50%)}
+.themeSwatch.navy{background:#101a2b}.themeSwatch.violet{background:#211735}.themeSwatch.green{background:#102b26}
+:root[data-theme="navy"]{color-scheme:dark;--bg:#0d1726;--card:#172338;--text:#edf4ff;--muted:#aab8cc;--line:#2b3b54;--accent:#67a8ff;--accent-strong:#a9ccff;--soft:#1b3558;--soft-success:#183c34;--danger:#ff867c;--shadow:0 3px 12px rgba(0,0,0,.24);--shadow-raised:0 8px 22px rgba(0,0,0,.34);--control:#1d2b42}
+:root[data-theme="violet"]{color-scheme:dark;--bg:#171124;--card:#251a38;--text:#f5efff;--muted:#c0b2d2;--line:#42325a;--accent:#a88cff;--accent-strong:#d0c2ff;--soft:#36275a;--soft-success:#1e4036;--danger:#ff8b91;--shadow:0 3px 12px rgba(0,0,0,.26);--shadow-raised:0 8px 22px rgba(0,0,0,.36);--control:#302245}
+:root[data-theme="green"]{color-scheme:dark;--bg:#0d211e;--card:#16342e;--text:#ecfff7;--muted:#afd0c2;--line:#315249;--accent:#62d3ab;--accent-strong:#a4f2d2;--soft:#1d493f;--soft-success:#1d493f;--danger:#ff9187;--shadow:0 3px 12px rgba(0,0,0,.25);--shadow-raised:0 8px 22px rgba(0,0,0,.35);--control:#1d4038}
+:root[data-theme]:not([data-theme="light"]) .search,:root[data-theme]:not([data-theme="light"]) .smallbtn,:root[data-theme]:not([data-theme="light"]) .titleEdit,:root[data-theme]:not([data-theme="light"]) .utilityBtn,:root[data-theme]:not([data-theme="light"]) .pageChip,:root[data-theme]:not([data-theme="light"]) .pageAction,:root[data-theme]:not([data-theme="light"]) .tab,:root[data-theme]:not([data-theme="light"]) .summaryCard,:root[data-theme]:not([data-theme="light"]) .row,:root[data-theme]:not([data-theme="light"]) .reset,:root[data-theme]:not([data-theme="light"]) .sheet,:root[data-theme]:not([data-theme="light"]) .themeOption{background:var(--card);color:var(--text);border-color:var(--line)}
+:root[data-theme]:not([data-theme="light"]) .choice,:root[data-theme]:not([data-theme="light"]) .action:not(.primary):not(.delete),:root[data-theme]:not([data-theme="light"]) .secondary,:root[data-theme]:not([data-theme="light"]) .closex,:root[data-theme]:not([data-theme="light"]) .savePath,:root[data-theme]:not([data-theme="light"]) .importItem,:root[data-theme]:not([data-theme="light"]) .taskBox,:root[data-theme]:not([data-theme="light"]) .fileSourceHint{background:var(--control);color:var(--text);border-color:var(--line)}
+:root[data-theme]:not([data-theme="light"]) .field input,:root[data-theme]:not([data-theme="light"]) .field select,:root[data-theme]:not([data-theme="light"]) .taskBox textarea,:root[data-theme]:not([data-theme="light"]) .importItem input[type=text],:root[data-theme]:not([data-theme="light"]) .importItem select{background:var(--card);color:var(--text);border-color:var(--line)}
+:root[data-theme]:not([data-theme="light"]) .check{background:var(--control);border-color:var(--muted)}
+:root[data-theme]:not([data-theme="light"]) .row.done .tag{color:var(--muted)}
+:root[data-theme]:not([data-theme="light"]) .empty{background:var(--card);border-color:var(--line)}
+:root[data-theme]:not([data-theme="light"]) .tab.active,:root[data-theme]:not([data-theme="light"]) .choice.active,:root[data-theme]:not([data-theme="light"]) .pageChip.active{background:var(--soft);color:var(--accent-strong);border-color:var(--accent)}
+:root[data-theme]:not([data-theme="light"]) .themeOption.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(168,140,255,.2)}
+:root[data-theme]:not([data-theme="light"]) .reset{color:#ffb1aa;border-color:#6e4144}
+:root[data-theme]:not([data-theme="light"]) ::placeholder{color:var(--muted);opacity:.85}
 @media (min-width:700px){
   .app{padding-top:18px}
   .row{padding:10px 12px}
@@ -176,21 +226,46 @@ h1.editing{background:#fff;border:1px dashed #1769e0;border-radius:9px;padding:5
       <h1 id="docTitle">КИП — чек-лист</h1>
       <button class="titleEdit" id="editTitleBtn" aria-label="Редактировать название документа" title="Редактировать название">✏️</button>
     </div>
-    <div class="sub">Долгое нажатие на прибор → редактирование / удаление</div>
+    <div class="sub" id="lastSaved">Сохранено на устройстве: —</div>
     <div class="controls">
       <input id="search" class="search" type="search" placeholder="Поиск по тегу или установке">
       <button class="smallbtn" id="fontMinus" aria-label="Уменьшить шрифт">A−</button>
       <button class="smallbtn" id="fontPlus" aria-label="Увеличить шрифт">A+</button>
-      <button class="smallbtn" id="newDoc" aria-label="Создать новый документ" title="Создать новый документ">📄</button>
-      <button class="smallbtn savebtn" id="saveHtml" aria-label="Сохранить новую версию" title="Сохранить новую HTML-версию">💾</button>
-      <button class="smallbtn" id="shareHtml" aria-label="Отправить документ" title="Отправить документ">📤</button>
+    </div>
+    <div class="utilityRow" aria-label="Действия с документом">
+      <button class="utilityBtn" id="newDoc" type="button">Новый файл</button>
+      <button class="utilityBtn" id="saveHtml" type="button">Сохранить</button>
+      <button class="utilityBtn" id="shareHtml" type="button">Отправить</button>
+      <button class="utilityBtn" id="themeBtn" type="button">Тема</button>
+    </div>
+    <div class="pageBar" aria-label="Страницы чек-листа">
+      <div class="pageStrip" id="pageStrip"></div>
+      <button class="pageAction" id="addPageBtn" type="button">+ Страница</button>
+      <button class="pageAction" id="renamePageBtn" type="button" aria-label="Переименовать текущую страницу">✎</button>
     </div>
     <div class="tabs" id="tabs"></div>
   </div>
+  <section class="summaryCard" aria-label="Прогресс чек-листа">
+    <div class="summaryHead">
+      <div>
+        <span class="summaryKicker">Общий прогресс</span>
+        <span class="summaryCount" id="summaryCount">0 из 0 выполнено</span>
+      </div>
+      <output class="summaryPercent" id="summaryPercent">0%</output>
+    </div>
+    <div class="progressTrack" id="progressTrack" role="progressbar" aria-label="Общий прогресс" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <span class="progressFill" id="progressFill"></span>
+    </div>
+    <div class="summaryFoot">
+      <span id="summaryRemaining">Осталось: 0</span>
+      <span id="summaryFilter">Весь список</span>
+    </div>
+  </section>
   <div class="list" id="list"></div>
   <div class="footer">
-  <button class="reset" id="deleteAll">Удалить все теги</button>
-</div>
+    <button class="reset" id="clearChecks" title="Снять все отметки «Выполнено»">Снять отметки</button>
+    <button class="reset" id="deleteAll" title="Удалить все теги текущей страницы">Удалить теги</button>
+  </div>
 </div>
 
 <button class="fab" id="addBtn" aria-label="Добавить прибор">+</button>
@@ -209,6 +284,9 @@ h1.editing{background:#fff;border:1px dashed #1769e0;border-radius:9px;padding:5
       </button>
       <button class="choice" id="photoChoice" type="button">
         <span class="ico">🖼️</span>Загрузка фото
+      </button>
+      <button class="choice" id="fileChoice" type="button">
+        <span class="ico">📑</span>Excel / текст
       </button>
     </div>
 
@@ -250,6 +328,19 @@ h1.editing{background:#fff;border:1px dashed #1769e0;border-radius:9px;padding:5
         <button class="action primary" id="importBtn">Добавить распознанные</button>
       </div>
     </div>
+
+    <div id="fileForm" style="display:none">
+      <div class="fileSourceHint mini">Импортируйте теги из <strong>XLSX, XLS, CSV, TSV, TXT</strong> или <strong>JSON</strong>. Excel открывается локально в браузере через SheetJS с публичного CDN; подключение к интернету нужно только при первом импорте Excel.</div>
+      <input id="importFileInput" type="file" accept=".xlsx,.xls,.csv,.tsv,.txt,.json,text/plain,text/csv,application/json,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none">
+      <button class="action primary" id="fileSelectBtn" type="button" style="width:100%;margin-top:10px">Выбрать Excel или текстовый файл</button>
+      <button class="action" id="fileBackBtn" type="button" style="width:100%;margin-top:8px">← Выбрать другой способ</button>
+      <div id="fileImportStatus" class="mini" style="margin-top:10px"></div>
+      <div id="fileImportList" class="importList"></div>
+      <div class="actions" id="fileImportActions" style="display:none">
+        <button class="action" id="cancelFileImportBtn" type="button">Отмена</button>
+        <button class="action primary" id="fileImportBtn" type="button">Добавить теги</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -280,6 +371,20 @@ h1.editing{background:#fff;border:1px dashed #1769e0;border-radius:9px;padding:5
   </div>
 </div>
 
+<div class="overlay" id="themeOverlay">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="themeTitle">
+    <button class="closex" id="themeCloseBtn" type="button" aria-label="Закрыть выбор темы">×</button>
+    <h2 id="themeTitle">Оформление</h2>
+    <div class="mini" style="margin:-5px 0 12px">Тема сохраняется на этом устройстве и не влияет на данные чек-листа.</div>
+    <div class="themeGrid" id="themeGrid">
+      <button class="themeOption" data-theme-choice="light" type="button"><span class="themeSwatch light"></span>Светлая</button>
+      <button class="themeOption" data-theme-choice="navy" type="button"><span class="themeSwatch navy"></span>Тёмно-синяя</button>
+      <button class="themeOption" data-theme-choice="violet" type="button"><span class="themeSwatch violet"></span>Тёмно-фиолетовая</button>
+      <button class="themeOption" data-theme-choice="green" type="button"><span class="themeSwatch green"></span>Тёмно-зелёная</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -287,10 +392,15 @@ const INITIAL_DATA = [{"id": 1, "unit": "2131", "tag": "2131-PZT-414A", "done": 
 const DATA_KEY = "kip-checklist-v11";
 const FONT_KEY = "kip-checklist-font-v1";
 const DOC_TITLE_KEY = "kip-checklist-title-v1";
+const PAGES_KEY = "kip-checklist-pages-v21";
+const ACTIVE_PAGE_KEY = "kip-checklist-active-page-v21";
+const THEME_KEY = "kip-checklist-theme-v21";
 const DEFAULT_TITLE = "КИП — чек-лист";
 
 let docTitle = loadDocumentTitle();
-let data = loadData();
+let pages = loadPages();
+let activePageId = loadActivePageId();
+let data = getActivePage().data;
 let filter = "all";
 let query = "";
 let editId = null;
@@ -317,24 +427,111 @@ function saveDocumentTitle(){
   docTitle=value||DEFAULT_TITLE;
   localStorage.setItem(DOC_TITLE_KEY,docTitle);
   localStorage.setItem("kip-last-file-name",docTitle);
+  const page=getActivePage();if(page){page.updatedAt=new Date().toISOString();persistPages();}
   applyDocumentTitle();
+  renderLastSaved();
 }
 function cloneInitial(){ return INITIAL_DATA.map(x => ({...x, task:String(x.task||"")})); }
+function cloneItems(items){ return Array.isArray(items) ? items.map(x=>({...x,task:String(x.task||"")})) : []; }
 
 function loadData(){
   try{
     const raw = localStorage.getItem(DATA_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      if(Array.isArray(parsed) && parsed.length) return parsed.map(x=>({...x,task:String(x.task||"")}));
+      if(Array.isArray(parsed) && parsed.length) return cloneItems(parsed);
     }
   }catch(e){}
   const fresh = cloneInitial();
   localStorage.setItem(DATA_KEY, JSON.stringify(fresh));
   return fresh;
 }
+function createPageId(){return `page-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;}
+function loadPages(){
+  try{
+    const raw=localStorage.getItem(PAGES_KEY);
+    if(raw){
+      const parsed=JSON.parse(raw);
+      if(Array.isArray(parsed) && parsed.length){
+        const restored=parsed.map((page,index)=>({
+          id:String(page.id||createPageId()),
+          name:String(page.name||`Страница ${index+1}`).trim()||`Страница ${index+1}`,
+          data:cloneItems(page.data),
+          updatedAt:page.updatedAt||new Date().toISOString()
+        }));
+        localStorage.setItem(PAGES_KEY,JSON.stringify(restored));
+        return restored;
+      }
+    }
+  }catch(e){}
+  const first={id:createPageId(),name:"Основная страница",data:loadData(),updatedAt:new Date().toISOString()};
+  localStorage.setItem(PAGES_KEY,JSON.stringify([first]));
+  return [first];
+}
+function loadActivePageId(){
+  const stored=localStorage.getItem(ACTIVE_PAGE_KEY);
+  return pages.some(page=>page.id===stored) ? stored : pages[0].id;
+}
+function getActivePage(){return pages.find(page=>page.id===activePageId)||pages[0];}
+function persistPages(){localStorage.setItem(PAGES_KEY,JSON.stringify(pages));localStorage.setItem(ACTIVE_PAGE_KEY,activePageId);}
+function formatSaved(value){
+  const date=new Date(value||0);
+  if(Number.isNaN(date.getTime()))return "Сохранено на устройстве: —";
+  return `Сохранено на устройстве: ${date.toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})}`;
+}
+function renderLastSaved(){
+  const el=$("lastSaved"),page=getActivePage();
+  if(el&&page)el.textContent=formatSaved(page.updatedAt);
+}
+function renderPages(){
+  const strip=$("pageStrip");
+  if(!strip)return;
+  strip.innerHTML="";
+  pages.forEach(page=>{
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="pageChip"+(page.id===activePageId?" active":"");
+    button.title=page.name;
+    const name=document.createElement("span");name.textContent=page.name;
+    const count=document.createElement("span");count.className="pageCount";count.textContent=`• ${page.data.length}`;
+    button.append(name,count);
+    button.onclick=()=>selectPage(page.id);
+    strip.appendChild(button);
+  });
+}
+function selectPage(id){
+  const page=pages.find(item=>item.id===id);
+  if(!page)return;
+  activePageId=page.id;
+  data=page.data;
+  filter="all";query="";
+  if($("search"))$("search").value="";
+  persistPages();render();
+}
+function createPage(){
+  const proposed=`Страница ${pages.length+1}`;
+  const name=prompt("Название новой страницы",proposed);
+  if(name===null)return;
+  const clean=name.replace(/\s+/g," ").trim()||proposed;
+  const page={id:createPageId(),name:clean.slice(0,60),data:[],updatedAt:new Date().toISOString()};
+  pages.push(page);activePageId=page.id;data=page.data;filter="all";query="";
+  if($("search"))$("search").value="";
+  persistPages();render();showToast("Создана новая страница");
+}
+function renameActivePage(){
+  const page=getActivePage();if(!page)return;
+  const name=prompt("Название текущей страницы",page.name);
+  if(name===null)return;
+  const clean=name.replace(/\s+/g," ").trim();
+  if(!clean){showToast("Название не изменено");return;}
+  page.name=clean.slice(0,60);page.updatedAt=new Date().toISOString();persistPages();render();showToast("Название страницы сохранено");
+}
 function save(){
+  const page=getActivePage();
+  if(page){page.data=data;page.updatedAt=new Date().toISOString();}
+  persistPages();
   localStorage.setItem(DATA_KEY, JSON.stringify(data));
+  renderLastSaved();
 }
 function uniqueUnits(){
   return [...new Set(data.map(x => String(x.unit).trim()).filter(Boolean))];
@@ -429,8 +626,21 @@ function renderList(){
     list.appendChild(row);
   });
 }
+function renderSummary(){
+  const total=data.length;
+  const done=data.filter(x=>x.done).length;
+  const remaining=Math.max(0,total-done);
+  const percent=total ? Math.round((done/total)*100) : 0;
+  const scope=filter==="all" ? "Весь список" : filter==="todo" ? "Только невыполненные" : filter==="done" ? "Только выполненные" : `Unit ${filter}`;
+  $("summaryCount").textContent=`${done} из ${total} выполнено`;
+  $("summaryPercent").textContent=`${percent}%`;
+  $("summaryRemaining").textContent=`Осталось: ${remaining}`;
+  $("summaryFilter").textContent=query.trim() ? `${scope} · поиск` : scope;
+  $("progressFill").style.width=`${percent}%`;
+  $("progressTrack").setAttribute("aria-valuenow",String(percent));
+}
 function render(){
-  renderTabs();renderList();
+  renderPages();renderLastSaved();renderTabs();renderSummary();renderList();
 }
 function startLongPress(id){
   cancelLongPress();
@@ -449,8 +659,8 @@ function openEdit(id){
   const item=data.find(x=>x.id===id);
   if(!item)return;
   modalTitle.textContent="Редактировать прибор";
-  $("addChoice").style.display="none";
   setAddMode("manual");
+  $("addChoice").style.display="none";
   unitInput.value=item.unit;
   tagInput.value=item.tag;
   statusInput.value=item.done?"done":"todo";
@@ -532,12 +742,15 @@ function buildExportHtml(exportData=data){
   // Поэтому открытые меню, модальные окна, OCR-кандидаты и уведомления
   // никогда не попадают в сохранённый HTML.
   const clone=document.documentElement.cloneNode(true);
-  ["overlay","saveOverlay"].forEach(id=>{
+  ["overlay","saveOverlay","themeOverlay"].forEach(id=>{
     const el=clone.querySelector("#"+id);
     if(el){ el.classList.remove("show"); el.style.removeProperty("display"); }
   });
   const importList=clone.querySelector("#importList"); if(importList) importList.innerHTML="";
   const importActions=clone.querySelector("#importActions"); if(importActions) importActions.style.display="none";
+  const fileImportList=clone.querySelector("#fileImportList"); if(fileImportList) fileImportList.innerHTML="";
+  const fileImportActions=clone.querySelector("#fileImportActions"); if(fileImportActions) fileImportActions.style.display="none";
+  const fileImportStatus=clone.querySelector("#fileImportStatus"); if(fileImportStatus) fileImportStatus.textContent="";
   const toast=clone.querySelector("#toast"); if(toast){toast.className="toast";toast.textContent="";}
   const ocrStatus=clone.querySelector("#ocrStatus"); if(ocrStatus) ocrStatus.textContent="";
   const progress=clone.querySelector("#ocrProgressWrap"); if(progress) progress.style.display="none";
@@ -546,8 +759,8 @@ function buildExportHtml(exportData=data){
   const escapedTitle=JSON.stringify(docTitle).replace(/</g,"\\u003c");
   exported=exported.replace(/<title>.*?<\/title>/s, `<title>${docTitle.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</title>`);
   exported=exported.replace(
-    /const INITIAL_DATA = .*?;\nconst DATA_KEY = ".*?";\nconst FONT_KEY = ".*?";\nconst DOC_TITLE_KEY = ".*?";\nconst DEFAULT_TITLE = ".*?";/s,
-    `const INITIAL_DATA = ${currentJson};\nconst DATA_KEY = "${uniqueKey}";\nconst FONT_KEY = "kip-checklist-font-v1";\nconst DOC_TITLE_KEY = "kip-checklist-title-v1";\nconst DEFAULT_TITLE = ${escapedTitle};`
+    /const INITIAL_DATA = .*?;\nconst DATA_KEY = ".*?";\nconst FONT_KEY = ".*?";\nconst DOC_TITLE_KEY = ".*?";\nconst PAGES_KEY = ".*?";\nconst ACTIVE_PAGE_KEY = ".*?";\nconst THEME_KEY = ".*?";\nconst DEFAULT_TITLE = ".*?";/s,
+    `const INITIAL_DATA = ${currentJson};\nconst DATA_KEY = "${uniqueKey}";\nconst FONT_KEY = "kip-checklist-font-v1";\nconst DOC_TITLE_KEY = "kip-checklist-title-v1";\nconst PAGES_KEY = "${uniqueKey}-pages";\nconst ACTIVE_PAGE_KEY = "${uniqueKey}-active-page";\nconst THEME_KEY = "${uniqueKey}-theme";\nconst DEFAULT_TITLE = ${escapedTitle};`
   );
   return {html:exported, stamp};
 }
@@ -575,6 +788,7 @@ function safeFileBase(name){
 
 async function saveNow(){
   const base=safeFileBase($("fileNameInput").value);
+  if(!newDocumentMode)save();
   const exportData=newDocumentMode ? [] : data;
   const {html:exported,stamp}=buildExportHtml(exportData);
   const fileName=`${base} — ${stamp}.html`;
@@ -648,12 +862,15 @@ let ocrCandidates=[];
 function setAddMode(mode){
   addMode=mode;
   const photoMode=(mode==="camera"||mode==="photo");
+  const fileMode=mode==="file";
   $("manualChoice").classList.toggle("active",mode==="manual");
   $("cameraChoice").classList.toggle("active",mode==="camera");
   $("photoChoice").classList.toggle("active",mode==="photo");
-  $("addChoice").style.display=photoMode?"none":"grid";
+  $("fileChoice").classList.toggle("active",fileMode);
+  $("addChoice").style.display=(photoMode||fileMode)?"none":"grid";
   $("manualForm").style.display=mode==="manual"?"block":"none";
   $("photoForm").style.display=photoMode?"block":"none";
+  $("fileForm").style.display=fileMode?"block":"none";
 }
 function openAdd(){
   editId=null;
@@ -667,6 +884,9 @@ function openAdd(){
   $("importList").innerHTML="";
   $("importActions").style.display="none";
   $("ocrStatus").textContent="";
+  $("fileImportList").innerHTML="";
+  $("fileImportActions").style.display="none";
+  $("fileImportStatus").textContent="";
   overlay.classList.add("show");
   setTimeout(()=>unitInput.focus(),50);
 }
@@ -892,6 +1112,96 @@ function importCandidates(){
   save();closeModal();render();showToast(`Добавлено: ${added}`);
 }
 
+let fileCandidates=[];
+let sheetJsPromise=null;
+function escapeHtml(value){return String(value||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function loadSheetJs(){
+  if(window.XLSX)return Promise.resolve(window.XLSX);
+  if(sheetJsPromise)return sheetJsPromise;
+  sheetJsPromise=new Promise((resolve,reject)=>{
+    const script=document.createElement("script");
+    script.src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+    script.async=true;
+    script.onload=()=>window.XLSX ? resolve(window.XLSX) : reject(new Error("Не удалось запустить модуль Excel"));
+    script.onerror=()=>reject(new Error("Не удалось загрузить модуль Excel. Проверь интернет и повтори."));
+    document.head.appendChild(script);
+  });
+  return sheetJsPromise;
+}
+function renderFileCandidates(){
+  const box=$("fileImportList"),actions=$("fileImportActions");
+  box.innerHTML="";
+  if(!fileCandidates.length){
+    box.innerHTML='<div class="mini">Подходящих КИП-тегов не найдено. Проверь столбцы и формат вида 2131-PZT-414A.</div>';
+    actions.style.display="none";
+    return;
+  }
+  const existing=new Set(data.map(item=>String(item.tag||"").toUpperCase()));
+  fileCandidates.forEach(candidate=>{
+    const tag=String(candidate||"").toUpperCase();
+    const unit=(tag.match(/^(\d{4})-/)||[])[1]||"";
+    const already=existing.has(tag);
+    const row=document.createElement("div");row.className="importItem";
+    row.innerHTML=`<label style="display:flex;align-items:center;gap:10px;width:100%;"><input type="checkbox" ${already?"":"checked"} ${already?"disabled":""}><input type="text" value="${escapeHtml(tag)}" style="flex:1;min-width:0;"><select><option value="todo">Не выполнен</option><option value="done">Выполнен</option></select></label><div class="mini" style="margin-left:34px;">${already?"Уже есть в списке":""}${unit?" • установка "+unit:""}</div>`;
+    box.appendChild(row);
+  });
+  actions.style.display="flex";
+}
+async function runFileImport(file){
+  const status=$("fileImportStatus");
+  $("fileImportList").innerHTML="";$("fileImportActions").style.display="none";fileCandidates=[];
+  try{
+    if(file.size>10*1024*1024)throw new Error("Файл больше 10 МБ. Для бюджетного устройства лучше экспортировать нужный лист или сохранить его как CSV.");
+    const name=String(file.name||"").toLowerCase();
+    let text="";
+    if(/\.(xlsx|xls)$/.test(name)){
+      status.textContent="Открываю Excel локально на устройстве…";
+      const XLSX=await loadSheetJs();
+      const workbook=XLSX.read(await file.arrayBuffer(),{type:"array",cellText:true,cellDates:false});
+      text=workbook.SheetNames.map(sheetName=>XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName],{FS:"\t"})).join("\n");
+    }else if(/\.(csv|tsv|txt|json)$/.test(name) || /^text\//.test(file.type||"") || file.type==="application/json"){
+      status.textContent="Читаю текстовый файл…";
+      text=await file.text();
+    }else{
+      throw new Error("Поддерживаются XLSX, XLS, CSV, TSV, TXT и JSON. Для PDF или Word сначала сохрани таблицу как CSV или Excel.");
+    }
+    fileCandidates=extractTagsSmart(text);
+    status.textContent=`${file.name}: найдено кандидатов ${fileCandidates.length}. Проверь их перед добавлением.`;
+    renderFileCandidates();
+  }catch(error){
+    console.error(error);status.textContent=`Не удалось импортировать: ${error.message||error}`;
+  }
+}
+function importFileCandidates(){
+  const rows=[...$("fileImportList").querySelectorAll(".importItem")];
+  const existing=new Set(data.map(item=>String(item.tag||"").toUpperCase()));
+  let nextId=data.reduce((max,item)=>Math.max(max,Number(item.id)||0),0)+1;
+  let added=0;
+  rows.forEach(row=>{
+    const checked=row.querySelector('input[type="checkbox"]');
+    const tagInput=row.querySelector('input[type="text"]');
+    const statusInput=row.querySelector("select");
+    const tag=tagInput.value.trim().toUpperCase();
+    const unit=(tag.match(/^(\d{4})-/)||[])[1];
+    if(!checked.checked || !unit || !/^\d{4}-[A-Z]{2,6}-\d{3}[A-Z]?$/.test(tag) || existing.has(tag))return;
+    data.push({id:nextId++,unit,tag,done:statusInput.value==="done",task:""});
+    existing.add(tag);added++;
+  });
+  save();closeModal();render();showToast(`Добавлено из файла: ${added}`);
+}
+function applyTheme(theme){
+  const selected=["light","navy","violet","green"].includes(theme)?theme:"light";
+  document.documentElement.dataset.theme=selected;
+  localStorage.setItem(THEME_KEY,selected);
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.content={light:"#f5f7fa",navy:"#0d1726",violet:"#171124",green:"#0d211e"}[selected];
+  document.querySelectorAll("[data-theme-choice]").forEach(button=>button.classList.toggle("active",button.dataset.themeChoice===selected));
+}
+function openTheme(){
+  applyTheme(localStorage.getItem(THEME_KEY)||"light");
+  $("themeOverlay").classList.add("show");
+}
+
 
 $("editTitleBtn").onclick=()=>{
   const el=$("docTitle");
@@ -918,7 +1228,7 @@ $("docTitle").addEventListener("keydown",e=>{
   if(e.key==="Enter"){e.preventDefault();e.currentTarget.blur();}
 });
 
-$("search").addEventListener("input",e=>{query=e.target.value;renderList();});
+$("search").addEventListener("input",e=>{query=e.target.value;renderSummary();renderList();});
 $("fontMinus").onclick=()=>{
   let s=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--fontScale"))||1;
   s=Math.max(.65,Math.round((s-.1)*10)/10);document.documentElement.style.setProperty("--fontScale",s);localStorage.setItem(FONT_KEY,s);
@@ -934,14 +1244,26 @@ $("chooseFolderBtn").onclick=chooseSaveFolder;
 $("saveNowBtn").onclick=saveNow;
 $("saveCloseBtn").onclick=closeSaveDialog;
 $("shareHtml").onclick=shareCurrentDocument;
+$("themeBtn").onclick=openTheme;
+$("themeCloseBtn").onclick=()=>$("themeOverlay").classList.remove("show");
+$("themeOverlay").addEventListener("click",event=>{if(event.target===$("themeOverlay"))$("themeOverlay").classList.remove("show");});
+document.querySelectorAll("[data-theme-choice]").forEach(button=>button.onclick=()=>{applyTheme(button.dataset.themeChoice);$("themeOverlay").classList.remove("show");});
+$("addPageBtn").onclick=createPage;
+$("renamePageBtn").onclick=renameActivePage;
 $("closeBtn").onclick=closeModal;
 
 $("manualChoice").onclick=()=>setAddMode("manual");
 $("cameraChoice").onclick=()=>{setAddMode("camera"); setTimeout(()=>$("cameraInput").click(),50);};
 $("photoChoice").onclick=()=>{setAddMode("photo"); setTimeout(()=>$("photoInput").click(),50);};
+$("fileChoice").onclick=()=>setAddMode("file");
 $("ocrBackBtn").onclick=()=>{
   $("importList").innerHTML=""; $("importActions").style.display="none";
   $("ocrStatus").textContent=""; $("ocrProgressWrap").style.display="none";
+  setAddMode("manual");
+};
+$("fileSelectBtn").onclick=()=>$("importFileInput").click();
+$("fileBackBtn").onclick=()=>{
+  $("fileImportList").innerHTML="";$("fileImportActions").style.display="none";$("fileImportStatus").textContent="";
   setAddMode("manual");
 };
 $("ocrConfigBtn").onclick=configureOcr;
@@ -952,8 +1274,13 @@ $("cameraInput").addEventListener("change",e=>{
 $("photoInput").addEventListener("change",e=>{
   const file=e.target.files && e.target.files[0]; if(file)runOCR(file); e.target.value="";
 });
+$("importFileInput").addEventListener("change",event=>{
+  const file=event.target.files&&event.target.files[0];if(file)runFileImport(file);event.target.value="";
+});
 $("importBtn").onclick=importCandidates;
 $("cancelImportBtn").onclick=()=>setAddMode("manual");
+$("fileImportBtn").onclick=importFileCandidates;
+$("cancelFileImportBtn").onclick=()=>setAddMode("manual");
 $("saveOverlay").addEventListener("click",e=>{if(e.target===$("saveOverlay"))closeSaveDialog();});
 $("cancelBtn").onclick=closeModal;
 $("saveBtn").onclick=saveModal;
@@ -964,10 +1291,18 @@ $("deleteAll").onclick=()=>{
     data=[];save();filter="all";render();showToast("Все теги удалены");
   }
 };
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+$("clearChecks").onclick=()=>{
+  const marked=data.filter(item=>item.done).length;
+  if(!marked){showToast("Отметок для сброса нет");return;}
+  if(confirm(`Снять отметки «Выполнено» у ${marked} позиций?`)){
+    data.forEach(item=>item.done=false);save();filter="all";render();showToast("Все отметки сняты");
+  }
+};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeSaveDialog();$("themeOverlay").classList.remove("show");}});
 
 const savedFont=parseFloat(localStorage.getItem(FONT_KEY));
 if(savedFont) document.documentElement.style.setProperty("--fontScale",savedFont);
+applyTheme(localStorage.getItem(THEME_KEY)||"light");
 applyDocumentTitle();
 render();
 </script>
