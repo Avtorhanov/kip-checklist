@@ -1,0 +1,975 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f4f5f7">
+<title>КИП — чек-лист</title>
+<style>
+:root{
+  --fontScale:1;
+  --bg:#f4f5f7; --card:#fff; --text:#111827; --muted:#6b7280;
+  --line:#e5e7eb; --accent:#1769e0; --danger:#d92d20; --soft:#eef4ff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  font-size:calc(16px * var(--fontScale));
+}
+button,input,select{font:inherit}
+button{border:0}
+.app{max-width:760px;margin:0 auto;padding:12px 12px 150px}
+.top{
+  position:sticky;top:0;z-index:10;background:rgba(244,245,247,.96);
+  backdrop-filter:blur(12px);padding:4px 0 10px;
+}
+.titleRow{display:flex;align-items:center;gap:7px;margin:4px 0 8px}
+h1{font-size:calc(22px * var(--fontScale));margin:0;min-width:0;flex:1;overflow-wrap:anywhere}
+.titleEdit{flex:0 0 auto;min-width:38px;height:38px;border-radius:10px;background:#fff;border:1px solid var(--line);cursor:pointer}
+h1.editing{background:#fff;border:1px dashed #1769e0;border-radius:9px;padding:5px 7px;outline:none}
+.sub{color:var(--muted);font-size:calc(13px * var(--fontScale));margin-bottom:10px}
+.controls{display:flex;gap:7px;align-items:center}
+.search{
+  flex:1;min-width:0;border:1px solid var(--line);background:#fff;border-radius:12px;
+  padding:10px 12px;outline:none;
+}
+.smallbtn{
+  min-width:42px;height:42px;border-radius:12px;background:#fff;border:1px solid var(--line);
+  color:var(--text);font-weight:700;cursor:pointer;
+}
+
+.savebtn{font-size:19px}
+.addChoice{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 14px}
+.choice{
+  background:#f4f5f7;border:1px solid var(--line);border-radius:14px;
+  padding:14px 10px;text-align:center;cursor:pointer;font-weight:700;
+}
+.choice .ico{display:block;font-size:25px;margin-bottom:5px}
+.choice.active{background:var(--soft);border-color:#9bbcff}
+.savePath{
+  border:1px solid var(--line);border-radius:12px;background:#f8fafc;
+  padding:10px 11px;margin-bottom:10px;font-size:calc(12px * var(--fontScale));
+}
+.savePath strong{display:block;color:#374151;margin-bottom:3px}
+.nameRow{display:flex;gap:7px;align-items:center}
+.nameRow input{flex:1;min-width:0}
+.ocrProgress{
+  height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:8px 0;
+}
+.ocrBar{height:100%;width:0;background:#1769e0;transition:width .15s}
+.ocrTools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ocrWarn{padding:9px 10px;border-radius:10px;background:#fff8e1;border:1px solid #f2d48a;color:#6b4f00;margin-top:8px}
+.importList{display:grid;gap:6px;max-height:45vh;overflow:auto;margin:10px 0}
+.importItem{
+  background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:7px;
+}
+.importItem > label{
+  display:grid !important;grid-template-columns:30px minmax(0,1fr) 110px;gap:8px;align-items:center;width:100%;
+}
+.importItem input[type=text]{min-width:0;width:100%;box-sizing:border-box;}
+.importItem select{width:100%;min-width:0;box-sizing:border-box;}
+.importItem input[type=text]{border:1px solid #d1d5db;border-radius:8px;padding:8px}
+.importItem select{border:1px solid #d1d5db;border-radius:8px;padding:8px;background:#fff}
+.mini{font-size:calc(12px * var(--fontScale));color:var(--muted)}
+.dangerText{color:var(--danger)}
+
+.tabs{
+  display:flex;gap:7px;overflow-x:auto;padding:7px 0 4px;
+  scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:0 0 auto;background:#fff;border:1px solid var(--line);border-radius:999px;
+  padding:8px 12px;cursor:pointer;color:#374151;white-space:nowrap;
+}
+.tab.active{background:#111827;color:#fff;border-color:#111827}
+.stats{
+  display:flex;gap:8px;margin:6px 0 10px;flex-wrap:wrap;
+}
+.stat{
+  background:#fff;border:1px solid var(--line);border-radius:10px;padding:7px 10px;
+  color:#4b5563;font-size:calc(13px * var(--fontScale));
+}
+.list{display:grid;gap:7px}
+.row{
+  display:flex;align-items:center;gap:10px;background:var(--card);
+  border:1px solid var(--line);border-radius:13px;padding:7px 10px;
+  min-height:52px;user-select:none;touch-action:pan-y;
+}
+.row.done{background:#f8fafc}
+.check{
+  width:27px;height:27px;flex:0 0 27px;border-radius:8px;
+  border:2px solid #9ca3af;background:#fff;display:grid;place-items:center;
+  cursor:pointer;position:relative;
+}
+.check.on{background:var(--accent);border-color:var(--accent)}
+.check.on::after{
+  content:"";width:11px;height:6px;border-left:2px solid #fff;border-bottom:2px solid #fff;
+  transform:rotate(-45deg) translate(1px,-1px);
+}
+.num{width:30px;flex:0 0 30px;color:#9ca3af;font-size:calc(12px * var(--fontScale));text-align:right}
+.info{min-width:0;flex:1}
+.tag{font-weight:700;letter-spacing:.1px;overflow-wrap:anywhere}
+.unit{color:var(--muted);font-size:calc(12px * var(--fontScale));margin-top:2px}
+.row.done .tag{color:#6b7280;text-decoration:line-through}
+.taskDetails{margin-top:7px}
+.taskDetails summary{display:inline-flex;align-items:center;gap:5px;cursor:pointer;color:#1769e0;font-size:calc(12px * var(--fontScale));font-weight:700;list-style:none;user-select:none}
+.taskDetails summary::-webkit-details-marker{display:none}
+.taskDetails summary::before{content:"▾";font-size:11px;transition:transform .15s}
+.taskDetails[open] summary::before{transform:rotate(180deg)}
+.taskBox{margin-top:6px;padding:8px;background:#f8fafc;border:1px solid var(--line);border-radius:10px}
+.taskBox textarea{width:100%;min-height:54px;resize:vertical;border:1px solid #d1d5db;border-radius:8px;padding:8px;background:#fff;outline:none;font:inherit;font-size:calc(13px * var(--fontScale))}
+.taskSave{margin-top:6px;padding:7px 10px;border-radius:8px;background:#111827;color:#fff;font-size:calc(12px * var(--fontScale));font-weight:700;cursor:pointer}
+.longhint{font-size:calc(11px * var(--fontScale));color:#9ca3af}
+.empty{
+  text-align:center;color:var(--muted);background:#fff;border:1px dashed var(--line);
+  border-radius:14px;padding:24px 12px;
+}
+.fab{
+  position:fixed;z-index:20;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));
+  width:58px;height:58px;border-radius:50%;background:#111827;color:#fff;
+  font-size:30px;line-height:1;box-shadow:0 8px 24px rgba(0,0,0,.22);cursor:pointer;
+}
+.footer{position:fixed;z-index:19;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:rgba(244,245,247,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+.reset{color:#6b7280;background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 16px;cursor:pointer;font-size:calc(12px * var(--fontScale));font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.overlay{
+  display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.42);
+  align-items:flex-end;justify-content:center;
+}
+.overlay.show{display:flex}
+.sheet{
+  width:min(760px,100%);background:#fff;border-radius:20px 20px 0 0;
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom));
+}
+.sheet h2{margin:0 0 14px;font-size:calc(19px * var(--fontScale))}
+.field{margin-bottom:12px}
+.field label{display:block;color:#4b5563;font-size:calc(12px * var(--fontScale));margin:0 0 5px}
+.field input,.field select{
+  width:100%;border:1px solid #d1d5db;border-radius:11px;padding:11px 12px;
+  outline:none;background:#fff;
+}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.action{
+  padding:12px;border-radius:12px;background:#eef0f3;cursor:pointer;font-weight:700;
+}
+.action.primary{background:#111827;color:#fff}
+.action.delete{background:#fff0ef;color:var(--danger);border:1px solid #ffd3cf}
+.closex{float:right;background:#f1f2f4;border-radius:50%;width:34px;height:34px;cursor:pointer}
+.toast{
+  position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(12px);
+  opacity:0;pointer-events:none;background:#111827;color:#fff;border-radius:10px;
+  padding:9px 13px;font-size:13px;transition:.18s;z-index:80;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (min-width:700px){
+  .app{padding-top:18px}
+  .row{padding:10px 12px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="titleRow">
+      <h1 id="docTitle">КИП — чек-лист</h1>
+      <button class="titleEdit" id="editTitleBtn" aria-label="Редактировать название документа" title="Редактировать название">✏️</button>
+    </div>
+    <div class="sub">Долгое нажатие на прибор → редактирование / удаление</div>
+    <div class="controls">
+      <input id="search" class="search" type="search" placeholder="Поиск по тегу или установке">
+      <button class="smallbtn" id="fontMinus" aria-label="Уменьшить шрифт">A−</button>
+      <button class="smallbtn" id="fontPlus" aria-label="Увеличить шрифт">A+</button>
+      <button class="smallbtn" id="newDoc" aria-label="Создать новый документ" title="Создать новый документ">📄</button>
+      <button class="smallbtn savebtn" id="saveHtml" aria-label="Сохранить новую версию" title="Сохранить новую HTML-версию">💾</button>
+      <button class="smallbtn" id="shareHtml" aria-label="Отправить документ" title="Отправить документ">📤</button>
+    </div>
+    <div class="tabs" id="tabs"></div>
+  </div>
+  <div class="list" id="list"></div>
+  <div class="footer">
+  <button class="reset" id="deleteAll">Удалить все теги</button>
+</div>
+</div>
+
+<button class="fab" id="addBtn" aria-label="Добавить прибор">+</button>
+
+<div class="overlay" id="overlay">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <button class="closex" id="closeBtn">×</button>
+    <h2 id="modalTitle">Добавить прибор</h2>
+
+    <div class="addChoice" id="addChoice">
+      <button class="choice active" id="manualChoice" type="button">
+        <span class="ico">⌨️</span>Ввести вручную
+      </button>
+      <button class="choice" id="cameraChoice" type="button">
+        <span class="ico">📷</span>Камера
+      </button>
+      <button class="choice" id="photoChoice" type="button">
+        <span class="ico">🖼️</span>Загрузка фото
+      </button>
+    </div>
+
+    <div id="manualForm">
+      <div class="field">
+        <label for="unitInput">Unit Num</label>
+        <input id="unitInput" inputmode="numeric" autocomplete="off" placeholder="Например, 2131">
+      </div>
+      <div class="field">
+        <label for="tagInput">Tag Number</label>
+        <input id="tagInput" autocomplete="off" placeholder="Например, 2131-PZT-414A">
+      </div>
+      <div class="field">
+        <label for="statusInput">Статус</label>
+        <select id="statusInput">
+          <option value="todo">Невыполнено</option>
+          <option value="done">Выполнено</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button class="action" id="cancelBtn">Отмена</button>
+        <button class="action primary" id="saveBtn">Сохранить</button>
+        <button class="action delete" id="deleteBtn" style="display:none">Удалить прибор</button>
+      </div>
+    </div>
+
+    <div id="photoForm" style="display:none">
+      <div class="mini">Фото можно распознавать напрямую с Android/iPhone через OCR.space — без компьютера и локального backend. Для постоянного использования можно указать свой API-ключ. После распознавания все теги можно проверить и исправить перед добавлением.</div>
+      <button type="button" class="secondary" id="ocrConfigBtn" style="margin-top:8px">⚙️ Настроить OCR</button>
+      <div class="mini" id="ocrConfigStatus" style="margin-top:6px"></div>
+      <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none">
+      <input id="photoInput" type="file" accept="image/*" style="display:none">
+      <button class="action" id="ocrBackBtn" type="button" style="width:100%;margin-top:10px">← Выбрать другой способ</button>
+      <div id="ocrStatus" class="mini" style="margin-top:10px"></div>
+      <div class="ocrProgress" id="ocrProgressWrap" style="display:none"><div class="ocrBar" id="ocrBar"></div></div>
+      <div id="importList" class="importList"></div>
+      <div class="actions" id="importActions" style="display:none">
+        <button class="action" id="cancelImportBtn">Отмена</button>
+        <button class="action primary" id="importBtn">Добавить распознанные</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="saveOverlay">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <button class="closex" id="saveCloseBtn">×</button>
+    <h2>Сохранить новую версию</h2>
+    <div class="mini" style="margin-bottom:10px">Дата и время добавятся автоматически.</div>
+
+    <div class="field">
+      <label for="fileNameInput">Название</label>
+      <div class="nameRow">
+        <input id="fileNameInput" autocomplete="off" placeholder="Например, КИП-2131">
+        <span>.html</span>
+      </div>
+    </div>
+
+    <div class="savePath">
+      <strong>Корень сохранения</strong>
+      <span id="pathLabel">Не выбран</span>
+    </div>
+
+    <div class="actions">
+      <button class="action" id="chooseFolderBtn">📁 Выбрать папку</button>
+      <button class="action primary" id="saveNowBtn">💾 Сохранить</button>
+    </div>
+    <div class="mini" id="saveHint" style="margin-top:9px"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const INITIAL_DATA = [{"id": 1, "unit": "2131", "tag": "2131-PZT-414A", "done": false}, {"id": 2, "unit": "2131", "tag": "2131-PZT-414B", "done": false}, {"id": 3, "unit": "2131", "tag": "2131-PZT-414C", "done": false}, {"id": 4, "unit": "2131", "tag": "2131-PDZT-426B", "done": false}, {"id": 5, "unit": "2131", "tag": "2131-PDZT-426C", "done": false}, {"id": 6, "unit": "2131", "tag": "2131-PDZT-426A", "done": false}, {"id": 7, "unit": "2131", "tag": "2131-TZT-600B", "done": false}, {"id": 8, "unit": "2131", "tag": "2131-TZT-600A", "done": false}, {"id": 9, "unit": "2131", "tag": "2131-TZE-600C", "done": false}, {"id": 10, "unit": "2131", "tag": "2131-TZE-600B", "done": false}, {"id": 11, "unit": "2131", "tag": "2131-TZE-600A", "done": false}, {"id": 12, "unit": "2131", "tag": "2131-TZT-600C", "done": false}, {"id": 13, "unit": "2131", "tag": "2131-TZT-601C", "done": false}, {"id": 14, "unit": "2131", "tag": "2131-TZE-601B", "done": false}, {"id": 15, "unit": "2131", "tag": "2131-TZE-601C", "done": false}, {"id": 16, "unit": "2131", "tag": "2131-TZE-601A", "done": false}, {"id": 17, "unit": "2131", "tag": "2131-TZT-601B", "done": false}, {"id": 18, "unit": "2131", "tag": "2131-TZT-601A", "done": false}, {"id": 19, "unit": "2131", "tag": "2131-TZT-692", "done": false}, {"id": 20, "unit": "2131", "tag": "2131-TZT-693", "done": false}, {"id": 21, "unit": "2132", "tag": "2132-PZIT-417C", "done": true}, {"id": 22, "unit": "2132", "tag": "2132-PZIT-417B", "done": true}, {"id": 23, "unit": "2132", "tag": "2132-PZIT-417A", "done": true}, {"id": 24, "unit": "2132", "tag": "2132-PZIT-426A", "done": true}, {"id": 25, "unit": "2132", "tag": "2132-PZIT-426C", "done": true}, {"id": 26, "unit": "2132", "tag": "2132-PZIT-426B", "done": true}, {"id": 27, "unit": "2132", "tag": "2132-PZIT-431B", "done": true}, {"id": 28, "unit": "2132", "tag": "2132-PZIT-431A", "done": true}, {"id": 29, "unit": "2132", "tag": "2132-PZIT-431C", "done": true}, {"id": 30, "unit": "2132", "tag": "2132-PZIT-456C", "done": true}, {"id": 31, "unit": "2132", "tag": "2132-PZIT-456B", "done": true}, {"id": 32, "unit": "2132", "tag": "2132-PZIT-456A", "done": true}, {"id": 33, "unit": "2611", "tag": "2611-PZT-404A", "done": true}, {"id": 34, "unit": "2611", "tag": "2611-PZT-404C", "done": true}, {"id": 35, "unit": "2611", "tag": "2611-PZT-404B", "done": true}, {"id": 36, "unit": "2611", "tag": "2611-TZE-602B", "done": false}, {"id": 37, "unit": "2611", "tag": "2611-TZE-602A", "done": false}, {"id": 38, "unit": "2611", "tag": "2611-TZT-602C", "done": false}, {"id": 39, "unit": "2611", "tag": "2611-TZT-602B", "done": false}, {"id": 40, "unit": "2611", "tag": "2611-TZT-602A", "done": false}, {"id": 41, "unit": "2611", "tag": "2611-TZE-602C", "done": false}, {"id": 42, "unit": "2611", "tag": "2611-TZE-619C", "done": false}, {"id": 43, "unit": "2611", "tag": "2611-TZE-619B", "done": false}, {"id": 44, "unit": "2611", "tag": "2611-TZE-619A", "done": false}, {"id": 45, "unit": "2611", "tag": "2611-TZT-619C", "done": false}, {"id": 46, "unit": "2611", "tag": "2611-TZT-619B", "done": false}, {"id": 47, "unit": "2611", "tag": "2611-TZT-619A", "done": false}, {"id": 48, "unit": "2611", "tag": "2611-TZT-639B", "done": false}, {"id": 49, "unit": "2611", "tag": "2611-TZE-639C", "done": false}, {"id": 50, "unit": "2611", "tag": "2611-TZE-639B", "done": false}, {"id": 51, "unit": "2611", "tag": "2611-TZE-639A", "done": false}, {"id": 52, "unit": "2611", "tag": "2611-TZT-639C", "done": false}, {"id": 53, "unit": "2611", "tag": "2611-TZT-639A", "done": false}];
+const DATA_KEY = "kip-checklist-v11";
+const FONT_KEY = "kip-checklist-font-v1";
+const DOC_TITLE_KEY = "kip-checklist-title-v1";
+const DEFAULT_TITLE = "КИП — чек-лист";
+
+let docTitle = loadDocumentTitle();
+let data = loadData();
+let filter = "all";
+let query = "";
+let editId = null;
+let longPressTimer = null;
+let longPressTriggered = false;
+
+const $ = id => document.getElementById(id);
+const tabs = $("tabs"), list = $("list");
+const overlay = $("overlay"), unitInput = $("unitInput"), tagInput = $("tagInput");
+const statusInput = $("statusInput"), modalTitle = $("modalTitle"), deleteBtn = $("deleteBtn");
+
+function loadDocumentTitle(){
+  const saved=localStorage.getItem(DOC_TITLE_KEY);
+  return (saved&&saved.trim()) ? saved.trim() : DEFAULT_TITLE;
+}
+function applyDocumentTitle(){
+  const el=$("docTitle");
+  if(el) el.textContent=docTitle;
+  document.title=docTitle;
+}
+function saveDocumentTitle(){
+  const el=$("docTitle");
+  const value=(el?.textContent||"").replace(/\s+/g," ").trim();
+  docTitle=value||DEFAULT_TITLE;
+  localStorage.setItem(DOC_TITLE_KEY,docTitle);
+  localStorage.setItem("kip-last-file-name",docTitle);
+  applyDocumentTitle();
+}
+function cloneInitial(){ return INITIAL_DATA.map(x => ({...x, task:String(x.task||"")})); }
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(DATA_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(Array.isArray(parsed) && parsed.length) return parsed.map(x=>({...x,task:String(x.task||"")}));
+    }
+  }catch(e){}
+  const fresh = cloneInitial();
+  localStorage.setItem(DATA_KEY, JSON.stringify(fresh));
+  return fresh;
+}
+function save(){
+  localStorage.setItem(DATA_KEY, JSON.stringify(data));
+}
+function uniqueUnits(){
+  return [...new Set(data.map(x => String(x.unit).trim()).filter(Boolean))];
+}
+function visibleData(){
+  const q = query.trim().toLowerCase();
+  return data.filter(x => {
+    const f = filter === "all" || (filter === "done" && x.done) ||
+              (filter === "todo" && !x.done) || String(x.unit) === filter;
+    const s = !q || x.tag.toLowerCase().includes(q) || String(x.unit).toLowerCase().includes(q);
+    return f && s;
+  });
+}
+function renderTabs(){
+  const counts = {
+    all:data.length,
+    todo:data.filter(x=>!x.done).length,
+    done:data.filter(x=>x.done).length
+  };
+  const defs = [
+    ["all","Все",counts.all],["todo","Невыполненные",counts.todo],["done","Выполненные",counts.done]
+  ];
+  uniqueUnits().forEach(u => defs.push([u,u,data.filter(x=>String(x.unit)===u).length]));
+  tabs.innerHTML = "";
+  defs.forEach(([key,label,count])=>{
+    const b=document.createElement("button");
+    b.className="tab"+(filter===key?" active":"");
+    b.textContent=`${label} (${count})`;
+    b.onclick=()=>{filter=key;render();};
+    tabs.appendChild(b);
+  });
+  if(!defs.some(x=>x[0]===filter)) filter="all";
+}
+function renderList(){
+  const rows=visibleData();
+  list.innerHTML="";
+  if(!rows.length){
+    const e=document.createElement("div");e.className="empty";e.textContent="Ничего не найдено";list.appendChild(e);return;
+  }
+  rows.forEach((item,idx)=>{
+    const row=document.createElement("div");
+    row.className="row"+(item.done?" done":"");
+    row.dataset.id=item.id;
+
+    const check=document.createElement("button");
+    check.className="check"+(item.done?" on":"");
+    check.setAttribute("aria-label",item.done?"Отметить как невыполненное":"Отметить как выполненное");
+    check.onclick=(ev)=>{
+      ev.stopPropagation();
+      item.done=!item.done; save(); render();
+    };
+
+    const num=document.createElement("div");num.className="num";num.textContent=item.id;
+    const info=document.createElement("div");info.className="info";
+    const tag=document.createElement("div");tag.className="tag";tag.textContent=item.tag;
+    const unit=document.createElement("div");unit.className="unit";unit.textContent=`Unit ${item.unit}`;
+
+    const details=document.createElement("details");
+    details.className="taskDetails";
+    const summary=document.createElement("summary");
+    summary.textContent=item.task ? "Задание • есть" : "Задание";
+    const box=document.createElement("div");box.className="taskBox";
+    const ta=document.createElement("textarea");
+    ta.placeholder="Например: проверить питание 24 В, прозвонить линию, выполнить ПНР...";
+    ta.value=item.task||"";
+    ta.addEventListener("click",ev=>ev.stopPropagation());
+    ta.addEventListener("touchstart",ev=>ev.stopPropagation(),{passive:true});
+    const saveTask=document.createElement("button");
+    saveTask.className="taskSave";saveTask.type="button";saveTask.textContent="Сохранить задание";
+    saveTask.onclick=(ev)=>{
+      ev.stopPropagation();
+      item.task=ta.value.trim();
+      save();
+      summary.textContent=item.task ? "Задание • есть" : "Задание";
+      showToast("Задание сохранено");
+    };
+    box.append(ta,saveTask);
+    details.append(summary,box);
+    details.addEventListener("click",ev=>ev.stopPropagation());
+    details.addEventListener("touchstart",ev=>ev.stopPropagation(),{passive:true});
+    info.append(tag,unit,details);
+    row.append(check,num,info);
+
+    row.addEventListener("contextmenu",e=>{e.preventDefault();openEdit(item.id);});
+    row.addEventListener("touchstart",()=>startLongPress(item.id),{passive:true});
+    row.addEventListener("touchmove",cancelLongPress,{passive:true});
+    row.addEventListener("touchend",cancelLongPress,{passive:true});
+    row.addEventListener("touchcancel",cancelLongPress,{passive:true});
+    row.addEventListener("click",e=>{
+      if(longPressTriggered){e.preventDefault();longPressTriggered=false;}
+    });
+    list.appendChild(row);
+  });
+}
+function render(){
+  renderTabs();renderList();
+}
+function startLongPress(id){
+  cancelLongPress();
+  longPressTriggered=false;
+  longPressTimer=setTimeout(()=>{
+    longPressTriggered=true;
+    openEdit(id);
+    if(navigator.vibrate) navigator.vibrate(25);
+  },650);
+}
+function cancelLongPress(){
+  if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}
+}
+function openEdit(id){
+  editId=id;
+  const item=data.find(x=>x.id===id);
+  if(!item)return;
+  modalTitle.textContent="Редактировать прибор";
+  $("addChoice").style.display="none";
+  setAddMode("manual");
+  unitInput.value=item.unit;
+  tagInput.value=item.tag;
+  statusInput.value=item.done?"done":"todo";
+  deleteBtn.style.display="block";
+  overlay.classList.add("show");
+  setTimeout(()=>unitInput.focus(),50);
+}
+function closeModal(){overlay.classList.remove("show");editId=null;}
+function normalizeUnit(v){return v.trim().replace(/^Unit\\s*/i,"");}
+function saveModal(){
+  const unit=normalizeUnit(unitInput.value), tag=tagInput.value.trim();
+  if(!unit || !tag){showToast("Заполни Unit и Tag Number");return;}
+  const done=statusInput.value==="done";
+  if(editId!==null){
+    const item=data.find(x=>x.id===editId);
+    if(item){item.unit=unit;item.tag=tag;item.done=done;}
+  }else{
+    const max=data.reduce((m,x)=>Math.max(m,Number(x.id)||0),0);
+    data.push({id:max+1,unit,tag,done,task:""});
+  }
+  save();closeModal();render();showToast(editId===null?"Прибор добавлен":"Сохранено");
+}
+function deleteCurrent(){
+  if(editId===null)return;
+  const item=data.find(x=>x.id===editId);
+  if(!item)return;
+  if(!confirm(`Удалить ${item.tag}?`))return;
+  data=data.filter(x=>x.id!==editId);
+  save();closeModal();render();showToast("Прибор удалён");
+}
+function showToast(text){
+  const t=$("toast");t.textContent=text;t.classList.add("show");
+  clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>t.classList.remove("show"),1400);
+}
+
+function makeTimestamp(){
+  const d=new Date();
+  const pad=n=>String(n).padStart(2,"0");
+  return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function makeFileTimestamp(){
+  const d=new Date();
+  const pad=n=>String(n).padStart(2,"0");
+  return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${String(d.getFullYear()).slice(-2)}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
+}
+
+let selectedDirectory=null;
+let selectedDirectoryName="";
+let newDocumentMode=false;
+
+function openSaveDialog(isNew=false){
+  newDocumentMode=isNew;
+  $("fileNameInput").value = isNew
+    ? docTitle
+    : (localStorage.getItem("kip-last-file-name") || docTitle);
+  $("pathLabel").textContent = selectedDirectoryName || "Не выбран";
+  $("saveOverlay").querySelector("h2").textContent = isNew
+    ? "Создать новый документ"
+    : "Сохранить новую версию";
+  $("saveHint").textContent = isNew
+    ? "Будет создан чистый документ с тем же функционалом: добавление вручную, фото/OCR, редактирование, удаление и сохранение."
+    : (window.showDirectoryPicker
+      ? "На поддерживаемых браузерах можно выбрать папку напрямую."
+      : "На iPhone Safari папку выбирают через системное окно «Поделиться → Сохранить в Файлы».");
+  $("saveOverlay").classList.add("show");
+  setTimeout(()=>$("fileNameInput").focus(),50);
+}
+function closeSaveDialog(){
+  $("saveOverlay").classList.remove("show");
+  newDocumentMode=false;
+}
+
+function buildExportHtml(exportData=data){
+  const stamp=makeTimestamp();
+  const currentJson=JSON.stringify(exportData, null, 2).replace(/</g,"\\u003c");
+  const uniqueKey="kip-checklist-saved-"+Date.now();
+
+  // Сохраняем чистую копию приложения, а не текущее состояние интерфейса.
+  // Поэтому открытые меню, модальные окна, OCR-кандидаты и уведомления
+  // никогда не попадают в сохранённый HTML.
+  const clone=document.documentElement.cloneNode(true);
+  ["overlay","saveOverlay"].forEach(id=>{
+    const el=clone.querySelector("#"+id);
+    if(el){ el.classList.remove("show"); el.style.removeProperty("display"); }
+  });
+  const importList=clone.querySelector("#importList"); if(importList) importList.innerHTML="";
+  const importActions=clone.querySelector("#importActions"); if(importActions) importActions.style.display="none";
+  const toast=clone.querySelector("#toast"); if(toast){toast.className="toast";toast.textContent="";}
+  const ocrStatus=clone.querySelector("#ocrStatus"); if(ocrStatus) ocrStatus.textContent="";
+  const progress=clone.querySelector("#ocrProgressWrap"); if(progress) progress.style.display="none";
+
+  let exported="<!doctype html>\n"+clone.outerHTML;
+  const escapedTitle=JSON.stringify(docTitle).replace(/</g,"\\u003c");
+  exported=exported.replace(/<title>.*?<\/title>/s, `<title>${docTitle.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</title>`);
+  exported=exported.replace(
+    /const INITIAL_DATA = .*?;\nconst DATA_KEY = ".*?";\nconst FONT_KEY = ".*?";\nconst DOC_TITLE_KEY = ".*?";\nconst DEFAULT_TITLE = ".*?";/s,
+    `const INITIAL_DATA = ${currentJson};\nconst DATA_KEY = "${uniqueKey}";\nconst FONT_KEY = "kip-checklist-font-v1";\nconst DOC_TITLE_KEY = "kip-checklist-title-v1";\nconst DEFAULT_TITLE = ${escapedTitle};`
+  );
+  return {html:exported, stamp};
+}
+async function chooseSaveFolder(){
+  if(!window.showDirectoryPicker){
+    showToast("На этом iPhone папка выбирается через «Сохранить в Файлы»");
+    return;
+  }
+  try{
+    selectedDirectory=await window.showDirectoryPicker({mode:"readwrite",id:"kip-save-root"});
+    selectedDirectoryName=selectedDirectory.name || "Выбранная папка";
+    $("pathLabel").textContent=selectedDirectoryName;
+    showToast("Папка выбрана");
+  }catch(e){
+    if(e.name!=="AbortError") showToast("Не удалось выбрать папку");
+  }
+}
+
+function safeFileBase(name){
+  return name.trim()
+    .replace(/[\\/:*?"<>|]/g,"-")
+    .replace(/\s+/g," ")
+    .replace(/\.+$/,"") || "КИП-чек-лист";
+}
+
+async function saveNow(){
+  const base=safeFileBase($("fileNameInput").value);
+  const exportData=newDocumentMode ? [] : data;
+  const {html:exported,stamp}=buildExportHtml(exportData);
+  const fileName=`${base} — ${stamp}.html`;
+  localStorage.setItem("kip-last-file-name",base);
+
+  try{
+    if(selectedDirectory){
+      const handle=await selectedDirectory.getFileHandle(fileName,{create:true});
+      const writable=await handle.createWritable();
+      await writable.write(exported);
+      await writable.close();
+      closeSaveDialog();
+      showToast(`Сохранено: ${fileName}`);
+      return;
+    }
+
+    const file=new File([exported],fileName,{type:"text/html"});
+    if(navigator.canShare && navigator.canShare({files:[file]}) && navigator.share){
+      await navigator.share({title:fileName,files:[file]});
+      closeSaveDialog();
+      showToast("Файл передан в системное окно сохранения");
+      return;
+    }
+
+    const blob=new Blob([exported],{type:"text/html;charset=utf-8"});
+    if(navigator.share){
+      const file=new File([blob],fileName,{type:"text/html"});
+      if(!navigator.canShare || navigator.canShare({files:[file]})){
+        await navigator.share({title:fileName,files:[file]});
+        closeSaveDialog();
+        showToast("Выбери «Сохранить в Файлы»");
+        return;
+      }
+    }
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a"); a.href=url; a.download=fileName;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    closeSaveDialog(); showToast(`Сохранено: ${fileName}`);
+  }catch(e){
+    if(e.name!=="AbortError") showToast("Сохранение отменено или недоступно");
+  }
+}
+
+
+
+async function shareCurrentDocument(){
+  const {html:exported,stamp}=buildExportHtml(data);
+  const fileName=`КИП-чек-лист — ${stamp}.html`;
+  const file=new File([exported],fileName,{type:"text/html"});
+  try{
+    if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+      await navigator.share({title:fileName,text:"КИП — чек-лист",files:[file]});
+      showToast("Документ отправлен");
+      return;
+    }
+    const url=URL.createObjectURL(file);
+    const a=document.createElement("a"); a.href=url; a.download=fileName;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    showToast("Документ подготовлен");
+  }catch(e){
+    if(e.name!=="AbortError") showToast("Не удалось отправить документ");
+  }
+}
+
+
+let addMode="manual";
+let ocrCandidates=[];
+
+function setAddMode(mode){
+  addMode=mode;
+  const photoMode=(mode==="camera"||mode==="photo");
+  $("manualChoice").classList.toggle("active",mode==="manual");
+  $("cameraChoice").classList.toggle("active",mode==="camera");
+  $("photoChoice").classList.toggle("active",mode==="photo");
+  $("addChoice").style.display=photoMode?"none":"grid";
+  $("manualForm").style.display=mode==="manual"?"block":"none";
+  $("photoForm").style.display=photoMode?"block":"none";
+}
+function openAdd(){
+  editId=null;
+  modalTitle.textContent="Добавить прибор";
+  $("addChoice").style.display="grid";
+  setAddMode("manual");
+  unitInput.value=uniqueUnits()[0] || "";
+  tagInput.value="";
+  statusInput.value="todo";
+  deleteBtn.style.display="none";
+  $("importList").innerHTML="";
+  $("importActions").style.display="none";
+  $("ocrStatus").textContent="";
+  overlay.classList.add("show");
+  setTimeout(()=>unitInput.focus(),50);
+}
+function normalizeOcrText(text){
+  return String(text||'').toUpperCase()
+    .replace(/[–—−_]/g,"-")
+    .replace(/[ОO]/g,"O")
+    .replace(/[ІI]/g,"I")
+    .replace(/[Ё]/g,"E")
+    .replace(/[\r\n]+/g,"\n");
+}
+function canonicalTag(s){
+  const t=normalizeOcrText(s).replace(/[^A-Z0-9-]/g,"");
+  const m=t.match(/(\d{4})-([A-Z]{2,8})-(\d{2,4})([A-Z]?)/);
+  if(!m)return null;
+  let n=m[3];
+  if(n.length<3)n=n.padStart(3,"0");
+  if(n.length>3)n=n.slice(-3);
+  return `${m[1]}-${m[2]}-${n}${m[4]||""}`;
+}
+function extractTagsFromOCR(text){
+  const n=normalizeOcrText(text), found=new Set();
+  const loose=/(\d{4})\s*-?\s*([A-Z]{2,8})\s*-?\s*(\d{2,4})\s*([A-Z]?)\b/g;
+  let m;
+  while((m=loose.exec(n))){
+    const t=canonicalTag(`${m[1]}-${m[2]}-${m[3]}${m[4]}`);
+    if(t)found.add(t);
+  }
+  return [...found];
+}
+function knownTags(){ return data.map(x=>x.tag).filter(Boolean); }
+function updateOcrConfigStatus(){
+  const key=localStorage.getItem('kipOcrSpaceKey')||'helloworld';
+  const backend=localStorage.getItem('kipOcrApiUrl')||'';
+  if(backend) $("ocrConfigStatus").textContent=`Режим: Google Vision backend (${backend})`;
+  else if(key==='helloworld') $("ocrConfigStatus").textContent='Режим: OCR.space Engine 2 → 3 • без ПК';
+  else $("ocrConfigStatus").textContent='Режим: OCR.space Engine 2 → 3 • ваш API-ключ';
+}
+function configureOcr(){
+  const current=localStorage.getItem('kipOcrSpaceKey')||'helloworld';
+  const key=prompt('API-ключ OCR.space. Для быстрого теста оставьте helloworld. Для постоянной работы лучше использовать свой бесплатный ключ.',current);
+  if(key===null)return;
+  const clean=key.trim();
+  if(clean) localStorage.setItem('kipOcrSpaceKey',clean); else localStorage.removeItem('kipOcrSpaceKey');
+  updateOcrConfigStatus();
+}
+function setProgress(v){ $('ocrBar').style.width=Math.max(0,Math.min(100,v))+'%'; }
+async function fileToJpeg(file,maxSide=1800,quality=.76){
+  return new Promise((resolve,reject)=>{
+    const img=new Image(), url=URL.createObjectURL(file);
+    img.onload=async()=>{
+      try{
+        let side=maxSide, q=quality, blob=null;
+        // Android camera photos can be very large. OCR.space free API has a 1 MB file limit,
+        // so compress adaptively before sending instead of uploading the original.
+        for(let attempt=0;attempt<6;attempt++){
+          const scale=Math.min(1,side/Math.max(img.naturalWidth,img.naturalHeight));
+          const c=document.createElement('canvas');
+          c.width=Math.max(1,Math.round(img.naturalWidth*scale));
+          c.height=Math.max(1,Math.round(img.naturalHeight*scale));
+          const ctx=c.getContext('2d',{alpha:false});
+          ctx.drawImage(img,0,0,c.width,c.height);
+          blob=await new Promise(r=>c.toBlob(r,'image/jpeg',q));
+          if(blob && blob.size<=900*1024) break;
+          side=Math.round(side*.82); q=Math.max(.58,q-.05);
+        }
+        URL.revokeObjectURL(url);
+        if(!blob) return reject(new Error('Не удалось подготовить изображение'));
+        if(blob.size>1024*1024) return reject(new Error('Фото слишком большое для OCR. Попробуй снять ближе или использовать «Загрузка фото».'));
+        resolve(blob);
+      }catch(e){URL.revokeObjectURL(url);reject(e)}
+    };
+    img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Не удалось открыть изображение'))};
+    img.src=url;
+  });
+}
+function fetchWithTimeout(url,options={},timeoutMs=35000){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),timeoutMs);
+  return fetch(url,{...options,signal:controller.signal})
+    .finally(()=>clearTimeout(timer))
+    .catch(e=>{
+      if(e && e.name==='AbortError') throw new Error('OCR не ответил за 35 секунд. Повторяю более быстрым режимом…');
+      throw e;
+    });
+}
+function levenshtein(a,b){
+  const m=a.length,n=b.length,prev=Array(n+1).fill(0),cur=Array(n+1).fill(0);
+  for(let j=0;j<=n;j++)prev[j]=j;
+  for(let i=1;i<=m;i++){cur[0]=i;for(let j=1;j<=n;j++)cur[j]=Math.min(cur[j-1]+1,prev[j]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));for(let j=0;j<=n;j++)prev[j]=cur[j]}
+  return prev[n];
+}
+function fuzzyKnownTag(tag){
+  const all=knownTags(); if(!all.length)return tag;
+  const compact=x=>x.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const a=compact(tag); let best=null,bestD=99;
+  for(const k of all){const b=compact(k),d=levenshtein(a,b); if(d<bestD){bestD=d;best=k}}
+  const max=Math.max(1,Math.floor(a.length*.12));
+  return best && bestD<=max ? best : tag;
+}
+function extractTagsSmart(text){
+  const norm=normalizeOcrText(text).replace(/[—–_]/g,'-');
+  const found=new Set();
+  const re=/\b(\d{4})\s*-?\s*([A-Z]{2,8})\s*-?\s*([0-9OQILSZ]{2,4})\s*([A-Z0-9]?)\b/g;
+  let m;
+  while((m=re.exec(norm))){
+    let num=m[3].replace(/O/g,'0').replace(/Q/g,'0').replace(/[IL]/g,'1').replace(/S/g,'5').replace(/Z/g,'2');
+    const candidate=canonicalTag(`${m[1]}-${m[2]}-${num}${m[4]||''}`);
+    if(candidate)found.add(fuzzyKnownTag(candidate));
+  }
+  return [...found];
+}
+async function runOCR(file){
+  $("ocrProgressWrap").style.display="block"; setProgress(5);
+  try{
+    $("ocrStatus").textContent="Подготавливаю фото…";
+    const image=await fileToJpeg(file,1800,.76); setProgress(18);
+    const backend=localStorage.getItem('kipOcrApiUrl')||'';
+    if(backend){
+      $("ocrStatus").textContent="Отправка фото в Google Vision…";
+      const fd=new FormData(); fd.append("file",image,"photo.jpg"); fd.append("known_tags",JSON.stringify(knownTags()));
+      const r=await fetchWithTimeout(backend,{method:"POST",body:fd},35000); if(!r.ok)throw new Error(`OCR HTTP ${r.status}`);
+      setProgress(70); const out=await r.json(); ocrCandidates=[...new Set((out.candidates||[]).map(x=>x.tag).filter(Boolean))];
+      setProgress(100); $("ocrStatus").textContent=`OCR backend: найдено кандидатов ${ocrCandidates.length}. Проверь перед добавлением.`; renderImportCandidates(); return;
+    }
+    const key=localStorage.getItem('kipOcrSpaceKey')||'helloworld';
+    const localPage = location.protocol === 'file:' || location.origin === 'null' || /android\.fileexplorer\.myprovider/i.test(location.origin);
+    if(localPage){
+      $("ocrStatus").textContent="⚠️ Страница открыта как локальный файл Android. Такой запуск может блокировать запрос OCR.space. Для OCR открой эту же страницу через HTTPS (GitHub Pages).";
+      setProgress(0);
+      return;
+    }
+    let lastError=null;
+    // Engine 2 is the default/balanced engine and is faster on larger photos.
+    // Engine 3 is used only as a fallback when Engine 2 completes but finds nothing.
+    for(const engine of ['2','3']){
+      try{
+        $("ocrStatus").textContent=engine==='2' ? "Распознаю OCR.space Engine 2…" : "Engine 2 не нашёл теги — пробую Engine 3…";
+        setProgress(engine==='2'?25:42);
+        const fd=new FormData();
+        fd.append('file',image,'kip-photo.jpg');
+        fd.append('apikey',key);
+        fd.append('language','auto');
+        fd.append('OCREngine',engine);
+        fd.append('isTable','true');
+        fd.append('detectOrientation','true');
+        fd.append('scale','true');
+        fd.append('isOverlayRequired','false');
+        const r=await fetchWithTimeout('https://api.ocr.space/parse/image',{method:'POST',body:fd},engine==='2'?20000:30000);
+        if(!r.ok)throw new Error(`OCR.space HTTP ${r.status}`);
+        setProgress(engine==='3'?72:82);
+        const out=await r.json();
+        if(out.IsErroredOnProcessing) throw new Error(out.ErrorMessage||out.ErrorDetails||'OCR.space error');
+        const text=(out.ParsedResults||[]).map(x=>x.ParsedText||'').join('\n');
+        ocrCandidates=extractTagsSmart(text);
+        setProgress(100);
+        $("ocrStatus").textContent=`OCR.space Engine ${engine}: найдено кандидатов ${ocrCandidates.length}. Проверь перед добавлением.`;
+        renderImportCandidates();
+        return;
+      }catch(e){
+        lastError=e;
+        if(engine==='2') continue;
+      }
+    }
+    throw lastError||new Error('OCR не ответил');
+  }catch(e){
+    console.error(e); setProgress(0);
+    $("ocrStatus").textContent=`Ошибка OCR: ${e.message||e}. Проверь интернет или укажи свой API-ключ OCR.space в ⚙️ Настроить OCR.`;
+  }
+}
+function renderImportCandidates(){
+  const box=$('importList');
+  const actions=$('importActions');
+  box.innerHTML='';
+  if(!ocrCandidates.length){
+    box.innerHTML='<div class="mini">Подходящих КИП-тегов не найдено. Попробуй сфотографировать ближе, ровнее или использовать «Загрузка фото» с оригиналом.</div>';
+    actions.style.display='none';
+    return;
+  }
+  const existing=new Set(data.map(x=>String(x.tag||'').toUpperCase()));
+  ocrCandidates.forEach((candidate,i)=>{
+    const tag=String(candidate||'').toUpperCase();
+    const unit=(tag.match(/^(\d{4})-/)||[])[1]||'';
+    const already=existing.has(tag);
+    const row=document.createElement('div');
+    row.className='importItem';
+    row.innerHTML=`
+      <label style="display:flex;align-items:center;gap:10px;width:100%;">
+        <input type="checkbox" ${already?'':'checked'} ${already?'disabled':''}>
+        <input type="text" value="${tag.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}" style="flex:1;min-width:0;">
+        <select>
+          <option value="todo">Не выполнен</option>
+          <option value="done">Выполнен</option>
+        </select>
+      </label>
+      <div class="mini" style="margin-left:34px;">${already?'Уже есть в списке':''}${unit?' • установка '+unit:''}</div>`;
+    box.appendChild(row);
+  });
+  actions.style.display='flex';
+}
+function importCandidates(){
+  const rows=[...$("importList").querySelectorAll(".importItem")];
+  const toAdd=[];
+  rows.forEach(row=>{
+    const cb=row.querySelector('input[type="checkbox"]');
+    if(!cb.checked)return;
+    const inp=row.querySelector('input[type="text"]');
+    const sel=row.querySelector("select");
+    const tag=inp.value.trim().toUpperCase();
+    const m=tag.match(/^(\d{4})-/);
+    if(!m)return;
+    if(!/^\d{4}-[A-Z]{2,6}-\d{3}[A-Z]?$/.test(tag))return;
+    toAdd.push({unit:m[1],tag,done:sel.value==="done",task:""});
+  });
+  const existing=new Set(data.map(x=>x.tag.toUpperCase()));
+  let nextId=data.reduce((m,x)=>Math.max(m,Number(x.id)||0),0)+1;
+  let added=0;
+  for(const x of toAdd){
+    if(existing.has(x.tag))continue;
+    data.push({id:nextId++,unit:x.unit,tag:x.tag,done:x.done,task:x.task||""});
+    existing.add(x.tag);added++;
+  }
+  save();closeModal();render();showToast(`Добавлено: ${added}`);
+}
+
+
+$("editTitleBtn").onclick=()=>{
+  const el=$("docTitle");
+  if(el.getAttribute("contenteditable")==="true"){
+    el.setAttribute("contenteditable","false");
+    saveDocumentTitle();
+    showToast("Название сохранено");
+    return;
+  }
+  el.setAttribute("contenteditable","true");
+  el.classList.add("editing");
+  el.focus();
+  const range=document.createRange();range.selectNodeContents(el);
+  const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
+};
+$("docTitle").addEventListener("blur",()=>{
+  if($("docTitle").getAttribute("contenteditable")==="true"){
+    $("docTitle").setAttribute("contenteditable","false");
+    $("docTitle").classList.remove("editing");
+    saveDocumentTitle();
+  }
+});
+$("docTitle").addEventListener("keydown",e=>{
+  if(e.key==="Enter"){e.preventDefault();e.currentTarget.blur();}
+});
+
+$("search").addEventListener("input",e=>{query=e.target.value;renderList();});
+$("fontMinus").onclick=()=>{
+  let s=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--fontScale"))||1;
+  s=Math.max(.65,Math.round((s-.1)*10)/10);document.documentElement.style.setProperty("--fontScale",s);localStorage.setItem(FONT_KEY,s);
+};
+$("fontPlus").onclick=()=>{
+  let s=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--fontScale"))||1;
+  s=Math.min(1.35,Math.round((s+.1)*10)/10);document.documentElement.style.setProperty("--fontScale",s);localStorage.setItem(FONT_KEY,s);
+};
+$("addBtn").onclick=openAdd;
+$("newDoc").onclick=()=>openSaveDialog(true);
+$("saveHtml").onclick=()=>openSaveDialog(false);
+$("chooseFolderBtn").onclick=chooseSaveFolder;
+$("saveNowBtn").onclick=saveNow;
+$("saveCloseBtn").onclick=closeSaveDialog;
+$("shareHtml").onclick=shareCurrentDocument;
+$("closeBtn").onclick=closeModal;
+
+$("manualChoice").onclick=()=>setAddMode("manual");
+$("cameraChoice").onclick=()=>{setAddMode("camera"); setTimeout(()=>$("cameraInput").click(),50);};
+$("photoChoice").onclick=()=>{setAddMode("photo"); setTimeout(()=>$("photoInput").click(),50);};
+$("ocrBackBtn").onclick=()=>{
+  $("importList").innerHTML=""; $("importActions").style.display="none";
+  $("ocrStatus").textContent=""; $("ocrProgressWrap").style.display="none";
+  setAddMode("manual");
+};
+$("ocrConfigBtn").onclick=configureOcr;
+updateOcrConfigStatus();
+$("cameraInput").addEventListener("change",e=>{
+  const file=e.target.files && e.target.files[0]; if(file)runOCR(file); e.target.value="";
+});
+$("photoInput").addEventListener("change",e=>{
+  const file=e.target.files && e.target.files[0]; if(file)runOCR(file); e.target.value="";
+});
+$("importBtn").onclick=importCandidates;
+$("cancelImportBtn").onclick=()=>setAddMode("manual");
+$("saveOverlay").addEventListener("click",e=>{if(e.target===$("saveOverlay"))closeSaveDialog();});
+$("cancelBtn").onclick=closeModal;
+$("saveBtn").onclick=saveModal;
+deleteBtn.onclick=deleteCurrent;
+overlay.addEventListener("click",e=>{if(e.target===overlay)closeModal();});
+$("deleteAll").onclick=()=>{
+  if(confirm("Удалить ВЕСЬ список? Все позиции, включая добавленные и отредактированные, будут удалены.")){
+    data=[];save();filter="all";render();showToast("Все теги удалены");
+  }
+};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+
+const savedFont=parseFloat(localStorage.getItem(FONT_KEY));
+if(savedFont) document.documentElement.style.setProperty("--fontScale",savedFont);
+applyDocumentTitle();
+render();
+</script>
+</body>
+</html>
