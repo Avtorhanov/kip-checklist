@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#f5f7fa">
+<meta name="theme-color" content="#1769e0" id="themeColorMeta">
+<meta name="apple-mobile-web-app-title" content="КИП-чек">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <title>КИП — чек-лист • Gemini Vision Test</title>
 <style>
 :root{
@@ -235,8 +242,79 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .exportPageButtons:empty{display:none}
 .pageContextMenu button.danger{color:var(--danger)}
 .pageContextMenu .menuSep{height:1px;margin:4px 3px;background:var(--line)}
-.exportMenu{display:grid;gap:7px}
-.exportMenu .choice{min-height:46px;text-align:left}
+.exportOverlay{
+  align-items:center;
+  justify-content:center;
+  padding:12px;
+}
+.exportSheet{
+  position:relative;
+  width:min(440px,calc(100vw - 24px));
+  max-height:min(78vh,620px);
+  padding:14px;
+  border-radius:18px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.exportSheet h2{
+  margin:2px 44px 8px 2px;
+  font-size:18px !important;
+  line-height:1.2;
+}
+.exportSheet .closex{
+  position:absolute;
+  top:12px;
+  right:12px;
+  float:none;
+  width:34px;
+  height:34px;
+  z-index:2;
+}
+.exportSheet .mini{
+  flex:0 0 auto;
+  font-size:13px !important;
+  line-height:1.35;
+  margin:0 40px 9px 2px !important;
+}
+.exportSheet .exportMenu{
+  display:grid;
+  gap:6px;
+  min-height:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding:1px 2px 2px;
+}
+.exportSheet .choice{
+  min-height:42px;
+  padding:9px 10px;
+  text-align:left;
+  font-size:14px !important;
+  line-height:1.15;
+  border-radius:11px;
+}
+.exportSheet .choice .ico{
+  display:inline-block;
+  width:26px;
+  margin:0 8px 0 0;
+  font-size:20px !important;
+  line-height:1;
+  vertical-align:-2px;
+  text-align:center;
+}
+.exportSheet .exportSectionLabel{
+  padding:6px 2px 1px;
+  font-size:11px !important;
+}
+.exportSheet .exportPageButtons{
+  display:grid;
+  gap:6px;
+}
+.exportSheet .exportPageButtons .choice{
+  min-height:40px;
+  padding:8px 10px;
+}
 .secondary{padding:9px 11px;border:1px solid var(--line);background:#f7f9fc;color:var(--text);border-radius:10px;font-size:calc(12px * var(--fontScale));font-weight:700;cursor:pointer}
 .fileSourceHint{padding:10px 11px;background:#f7f9fc;border:1px solid var(--line);border-radius:11px;line-height:1.4}
 :root[data-theme="navy"]{color-scheme:dark;--bg:#0d1726;--card:#172338;--text:#edf4ff;--muted:#aab8cc;--line:#2b3b54;--accent:#67a8ff;--accent-strong:#a9ccff;--soft:#1b3558;--soft-success:#183c34;--danger:#ff867c;--shadow:0 3px 12px rgba(0,0,0,.24);--shadow-raised:0 8px 22px rgba(0,0,0,.34);--control:#1d2b42}
@@ -442,8 +520,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   </div>
 </div>
 
-<div class="overlay" id="exportOverlay">
-  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+<div class="overlay exportOverlay" id="exportOverlay">
+  <div class="sheet exportSheet" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
     <button class="closex" id="exportCloseBtn" type="button" aria-label="Закрыть">×</button>
     <h2 id="exportTitle">Отправить</h2>
     <div class="mini" style="margin-bottom:10px">Выбери, что передать. После выбора смартфон откроет стандартное меню приложений.</div>
