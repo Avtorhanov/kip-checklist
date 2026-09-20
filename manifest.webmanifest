@@ -1,10 +1,15 @@
 {
+  "id": "./",
   "name": "КИП-чеклист",
   "short_name": "КИП-чек",
   "description": "Чек-лист КИП для инженера",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ],
   "background_color": "#f5f7fa",
   "theme_color": "#1769e0",
   "orientation": "portrait-primary",

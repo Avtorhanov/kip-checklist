@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#f5f7fa">
 <meta name="theme-color" content="#1769e0" id="themeColorMeta">
 <meta name="apple-mobile-web-app-title" content="КИП-чек">
 <meta name="mobile-web-app-capable" content="yes">
@@ -12,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-<title>КИП — чек-лист • Gemini Vision Test</title>
+<title>КИП — чек-лист • v33</title>
 <style>
 :root{
   --fontScale:1;
@@ -217,6 +216,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 }
 @media (hover:hover){.row:hover{border-color:#cfd9e8;box-shadow:0 4px 12px rgba(31,49,76,.09)}.smallbtn:hover,.iconBtn:hover{border-color:#c8d5e7}.tab:not(.active):hover,.choice:hover{background:#f3f7fc}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+#installApp[hidden]{display:none}
+#installApp{border-color:var(--accent);color:var(--accent);background:var(--soft);font-weight:800}
 .utilityRow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:7px}
 .utilityBtn{min-height:38px;padding:7px 5px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--text);font-size:calc(11px * var(--fontScale));font-weight:750;cursor:pointer;box-shadow:0 1px 3px rgba(30,41,59,.03)}
 .pageBar{display:flex;align-items:center;gap:7px;margin-top:9px}
@@ -356,6 +357,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <button class="utilityBtn" id="newDoc" type="button">Новый файл</button>
       <button class="utilityBtn" id="saveHtml" type="button">Сохранить</button>
       <button class="utilityBtn" id="shareHtml" type="button">Отправить</button>
+      <button class="utilityBtn" id="installApp" type="button" hidden>Установить</button>
     </div>
     <div class="pageBar" aria-label="Страницы чек-листа">
       <div class="pageViewport"><div class="pageStrip" id="pageStrip"></div></div>
@@ -1983,6 +1985,43 @@ $("clearChecks").onclick=()=>{
   }
 };
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeDuplicateDialog();closeSaveDialog();}});
+
+
+// PWA installation: Chromium may expose a native install prompt.
+// Safari/iOS keeps its normal "Add to Home Screen" browser flow.
+let deferredInstallPrompt=null;
+const installAppBtn=$("installApp");
+
+window.addEventListener("beforeinstallprompt",event=>{
+  event.preventDefault();
+  deferredInstallPrompt=event;
+  if(installAppBtn) installAppBtn.hidden=false;
+});
+
+if(installAppBtn){
+  installAppBtn.onclick=async()=>{
+    if(!deferredInstallPrompt)return;
+    const promptEvent=deferredInstallPrompt;
+    deferredInstallPrompt=null;
+    installAppBtn.hidden=true;
+    try{
+      await promptEvent.prompt();
+      await promptEvent.userChoice;
+    }catch(_){}
+  };
+}
+
+window.addEventListener("appinstalled",()=>{
+  deferredInstallPrompt=null;
+  if(installAppBtn) installAppBtn.hidden=true;
+  showToast("КИП-чек добавлен на главный экран");
+});
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  });
+}
 
 const savedFont=parseFloat(localStorage.getItem(FONT_KEY));
 if(savedFont) document.documentElement.style.setProperty("--fontScale",savedFont);
