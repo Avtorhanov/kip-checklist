@@ -2,25 +2,36 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#f5f7fa">
-<title>КИП — чек-лист</title>
+<title>КИП — чек-лист • Gemini Vision Test</title>
 <style>
 :root{
   --fontScale:1;
+  --appFont:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
   --bg:#f5f7fa; --card:#fff; --text:#172033; --muted:#687386;
   --line:#e2e7ef; --accent:#1769e0; --accent-strong:#1055bb; --danger:#c9332c;
   --soft:#edf4ff; --soft-success:#eef8f1; --shadow:0 3px 12px rgba(31,49,76,.08);
   --shadow-raised:0 8px 22px rgba(27,48,80,.16);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:#fff;overscroll-behavior-y:none;}
 body{
-  margin:0;background:var(--bg);color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  overscroll-behavior-y:none;
+  font-family:var(--appFont);
   font-size:calc(16px * var(--fontScale));
 }
-button,input,select,textarea{font:inherit}
+button,input,select,textarea{
+  font:inherit;
+  font-size:max(16px,calc(16px * var(--fontScale)));
+}
+button, input, select, textarea, option, label, summary {
+  font-family:inherit;
+}
 button{border:0}
 .app{max-width:760px;margin:0 auto;padding:calc(10px + env(safe-area-inset-top)) 12px 158px}
 .top{
@@ -29,7 +40,16 @@ button{border:0}
 }
 .titleRow{display:flex;align-items:center;gap:8px;margin:5px 0 2px}
 h1{font-size:calc(23px * var(--fontScale));letter-spacing:-.35px;margin:0;min-width:0;flex:1;overflow-wrap:anywhere}
-.titleEdit{flex:0 0 auto;min-width:40px;height:40px;border-radius:12px;background:#fff;border:1px solid var(--line);box-shadow:0 1px 3px rgba(30,41,59,.04);cursor:pointer}
+.titleActions{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.iconBtn{width:40px;height:40px;border-radius:12px;background:var(--card);border:1px solid var(--line);box-shadow:0 1px 3px rgba(30,41,59,.04);cursor:pointer;color:var(--text);display:grid;place-items:center;font-size:22px;font-weight:700;line-height:1}
+.iconBtn:active{transform:scale(.96)}
+
+.fontChoiceGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:4px}
+.fontChoice{min-height:58px;padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);text-align:left;cursor:pointer;box-shadow:0 1px 3px rgba(30,41,59,.03);font-size:15px;font-weight:700;transition:transform .12s ease,border-color .12s ease,background .12s ease}
+.fontChoice:active{transform:scale(.98)}
+.fontChoice.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(31,111,235,.10)}
+.fontChoiceName{display:block;font-size:14px;font-weight:800;line-height:1.15}
+.fontChoiceSample{display:block;margin-top:4px;color:var(--muted);font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 h1.editing{background:#fff;border:1px dashed var(--accent);border-radius:10px;padding:5px 7px;outline:none}
 .sub{color:var(--muted);font-size:calc(12px * var(--fontScale));margin:0 0 11px}
 .controls{display:flex;gap:7px;align-items:center}
@@ -39,8 +59,10 @@ h1.editing{background:#fff;border:1px dashed var(--accent);border-radius:10px;pa
 }
 .smallbtn{
   min-width:42px;height:42px;border-radius:12px;background:#fff;border:1px solid var(--line);
-  color:var(--text);font-weight:700;cursor:pointer;box-shadow:0 1px 3px rgba(30,41,59,.03);
+  color:var(--text);font-weight:700;cursor:pointer;box-shadow:0 1px 3px rgba(30,41,59,.03);display:flex;align-items:center;justify-content:center;gap:3px;
 }
+.smallbtn span{font-size:22px;line-height:1;font-weight:500}
+.smallbtn small{font-size:12px;line-height:1;font-weight:800}
 
 .savebtn{font-size:19px}
 .addChoice{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:4px 0 14px}
@@ -67,13 +89,16 @@ h1.editing{background:#fff;border:1px dashed var(--accent);border-radius:10px;pa
 .importItem{
   background:#f7f9fc;border:1px solid var(--line);border-radius:10px;padding:7px;
 }
-.importItem > label{
-  display:grid !important;grid-template-columns:30px minmax(0,1fr) 110px;gap:8px;align-items:center;width:100%;
+.importItem > .importRow{
+  display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:8px;align-items:center;width:100%;
 }
-.importItem input[type=text]{min-width:0;width:100%;box-sizing:border-box;}
-.importItem select{width:100%;min-width:0;box-sizing:border-box;}
-.importItem input[type=text]{border:1px solid #d1d5db;border-radius:8px;padding:8px}
-.importItem select{border:1px solid #d1d5db;border-radius:8px;padding:8px;background:#fff}
+.importItem input[type=text]{min-width:0;width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:8px;padding:8px;font-size:max(16px,calc(16px * var(--fontScale)))}
+.importPick,.importDone{
+  width:24px;height:24px;margin:0;accent-color:var(--accent);cursor:pointer;
+}
+.importDoneWrap{display:flex;align-items:center;gap:5px;white-space:nowrap;color:var(--muted);font-size:calc(12px * var(--fontScale));cursor:pointer;min-height:40px;padding:4px 2px;
+}
+.importDoneWrap span{user-select:none}
 .mini{font-size:calc(12px * var(--fontScale));color:var(--muted)}
 .dangerText{color:var(--danger)}
 
@@ -158,7 +183,7 @@ h1.editing{background:#fff;border:1px dashed var(--accent);border-radius:10px;pa
 .field label{display:block;color:#4b5563;font-size:calc(12px * var(--fontScale));margin:0 0 5px}
 .field input,.field select{
   width:100%;border:1px solid #cfd7e3;border-radius:11px;padding:11px 12px;
-  outline:none;background:#fff;
+  outline:none;background:#fff;font-size:max(16px,calc(16px * var(--fontScale)));
 }
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
 .action{
@@ -167,6 +192,8 @@ h1.editing{background:#fff;border:1px dashed var(--accent);border-radius:10px;pa
 .action.primary{background:var(--accent);color:#fff}
 .action.delete{background:#fff0ef;color:var(--danger);border:1px solid #ffd3cf}
 .closex{float:right;background:#f0f3f7;border-radius:11px;width:34px;height:34px;cursor:pointer;color:var(--text);font-size:20px}
+.duplicateMessage{padding:12px 13px;border:1px solid #f0cfcc;background:#fff7f6;border-radius:12px;line-height:1.45;color:var(--text);}
+.duplicateActions{grid-template-columns:1fr 1fr;margin-top:12px;}
 .toast{
   position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(12px);
   opacity:0;pointer-events:none;background:#111827;color:#fff;border-radius:10px;
@@ -181,36 +208,47 @@ button:active,.choice:active,.tab:active{transform:scale(.97)}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{
   outline:3px solid rgba(23,105,224,.24);outline-offset:2px;
 }
-@media (hover:hover){.row:hover{border-color:#cfd9e8;box-shadow:0 4px 12px rgba(31,49,76,.09)}.smallbtn:hover,.titleEdit:hover{border-color:#c8d5e7}.tab:not(.active):hover,.choice:hover{background:#f3f7fc}}
+@media (hover:hover){.row:hover{border-color:#cfd9e8;box-shadow:0 4px 12px rgba(31,49,76,.09)}.smallbtn:hover,.iconBtn:hover{border-color:#c8d5e7}.tab:not(.active):hover,.choice:hover{background:#f3f7fc}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 .utilityRow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:7px}
 .utilityBtn{min-height:38px;padding:7px 5px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--text);font-size:calc(11px * var(--fontScale));font-weight:750;cursor:pointer;box-shadow:0 1px 3px rgba(30,41,59,.03)}
 .pageBar{display:flex;align-items:center;gap:7px;margin-top:9px}
-.pageStrip{display:flex;gap:7px;overflow-x:auto;flex:1;padding:1px 0 3px;scrollbar-width:none}
+.pageViewport{position:relative;flex:1;min-width:0;overflow:hidden}
+.pageViewport::after{content:"";position:absolute;z-index:2;top:0;right:0;bottom:0;width:30px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--bg) 88%)}
+.pageStrip{display:flex;gap:7px;overflow-x:auto;flex:1;padding:1px 20px 3px 0;scrollbar-width:none;overscroll-behavior-x:contain}
 .pageStrip::-webkit-scrollbar{display:none}
-.pageChip{display:flex;align-items:center;gap:6px;flex:0 0 auto;max-width:180px;min-height:36px;padding:7px 10px;background:#fff;color:#4b5563;border:1px solid var(--line);border-radius:11px;cursor:pointer;font-size:calc(12px * var(--fontScale));font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pageChip{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none;position:relative;display:flex;align-items:center;gap:6px;flex:0 0 auto;max-width:180px;min-height:36px;padding:7px 10px;background:var(--card);color:var(--muted);border:1px solid var(--line);border-radius:11px;cursor:pointer;font-size:calc(12px * var(--fontScale));font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;touch-action:pan-x;transition:transform .14s ease,opacity .14s ease}
 .pageChip.active{background:var(--soft);color:var(--accent-strong);border-color:#9bbcff}
+.pageChip.selected{border-color:var(--accent);box-shadow:0 0 0 2px rgba(23,105,224,.12)}
+.pageChipMark{width:20px;height:20px;flex:0 0 20px;border-radius:50%;border:2px solid #aab4c2;display:grid;place-items:center;font-size:13px;line-height:1;color:transparent}
+.pageChip.selected .pageChipMark{background:var(--accent);border-color:var(--accent);color:#fff}
 .pageCount{color:var(--muted);font-size:calc(10px * var(--fontScale));font-weight:700}
-.pageAction{flex:0 0 auto;min-height:36px;padding:7px 9px;background:#fff;color:var(--accent-strong);border:1px solid #bfd3f5;border-radius:11px;font-size:calc(11px * var(--fontScale));font-weight:800;cursor:pointer}
+.pageAction{flex:0 0 auto;min-width:42px;min-height:38px;padding:5px 9px;background:var(--card);color:var(--accent-strong);border:1px solid #bfd3f5;border-radius:11px;font-size:25px;line-height:1;font-weight:500;cursor:pointer;display:grid;place-items:center}
+.addPageAction span{transform:translateY(-1px)}
+.pageContextMenu{position:fixed;z-index:120;min-width:190px;max-width:calc(100vw - 24px);padding:5px;border:1px solid var(--line);border-radius:13px;background:var(--card);box-shadow:var(--shadow-raised);display:none}
+.pageContextMenu.show{display:block}
+.pageContextMenu button{display:block;width:100%;min-height:40px;padding:9px 11px;border:0;border-radius:9px;background:transparent;color:var(--text);text-align:left;font-size:calc(13px * var(--fontScale));font-weight:750;cursor:pointer}
+.pageContextMenu button:active{background:var(--soft)}
+.pageContextMenu,.pageContextMenu button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.exportSectionLabel{padding:8px 3px 2px;color:var(--muted);font-size:calc(11px * var(--fontScale));font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.exportPageButtons{display:grid;gap:7px}
+.exportPageButtons:empty{display:none}
+.pageContextMenu button.danger{color:var(--danger)}
+.pageContextMenu .menuSep{height:1px;margin:4px 3px;background:var(--line)}
+.exportMenu{display:grid;gap:7px}
+.exportMenu .choice{min-height:46px;text-align:left}
 .secondary{padding:9px 11px;border:1px solid var(--line);background:#f7f9fc;color:var(--text);border-radius:10px;font-size:calc(12px * var(--fontScale));font-weight:700;cursor:pointer}
 .fileSourceHint{padding:10px 11px;background:#f7f9fc;border:1px solid var(--line);border-radius:11px;line-height:1.4}
-.themeGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.themeOption{display:flex;align-items:center;gap:9px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text);font-weight:750;cursor:pointer;text-align:left}
-.themeOption.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(23,105,224,.14)}
-.themeSwatch{width:28px;height:28px;border-radius:9px;flex:0 0 28px;border:1px solid rgba(255,255,255,.3)}
-.themeSwatch.light{background:linear-gradient(135deg,#f7f9fc 0 50%,#fff 50%)}
-.themeSwatch.navy{background:#101a2b}.themeSwatch.violet{background:#211735}.themeSwatch.green{background:#102b26}
 :root[data-theme="navy"]{color-scheme:dark;--bg:#0d1726;--card:#172338;--text:#edf4ff;--muted:#aab8cc;--line:#2b3b54;--accent:#67a8ff;--accent-strong:#a9ccff;--soft:#1b3558;--soft-success:#183c34;--danger:#ff867c;--shadow:0 3px 12px rgba(0,0,0,.24);--shadow-raised:0 8px 22px rgba(0,0,0,.34);--control:#1d2b42}
 :root[data-theme="violet"]{color-scheme:dark;--bg:#171124;--card:#251a38;--text:#f5efff;--muted:#c0b2d2;--line:#42325a;--accent:#a88cff;--accent-strong:#d0c2ff;--soft:#36275a;--soft-success:#1e4036;--danger:#ff8b91;--shadow:0 3px 12px rgba(0,0,0,.26);--shadow-raised:0 8px 22px rgba(0,0,0,.36);--control:#302245}
 :root[data-theme="green"]{color-scheme:dark;--bg:#0d211e;--card:#16342e;--text:#ecfff7;--muted:#afd0c2;--line:#315249;--accent:#62d3ab;--accent-strong:#a4f2d2;--soft:#1d493f;--soft-success:#1d493f;--danger:#ff9187;--shadow:0 3px 12px rgba(0,0,0,.25);--shadow-raised:0 8px 22px rgba(0,0,0,.35);--control:#1d4038}
-:root[data-theme]:not([data-theme="light"]) .search,:root[data-theme]:not([data-theme="light"]) .smallbtn,:root[data-theme]:not([data-theme="light"]) .titleEdit,:root[data-theme]:not([data-theme="light"]) .utilityBtn,:root[data-theme]:not([data-theme="light"]) .pageChip,:root[data-theme]:not([data-theme="light"]) .pageAction,:root[data-theme]:not([data-theme="light"]) .tab,:root[data-theme]:not([data-theme="light"]) .summaryCard,:root[data-theme]:not([data-theme="light"]) .row,:root[data-theme]:not([data-theme="light"]) .reset,:root[data-theme]:not([data-theme="light"]) .sheet,:root[data-theme]:not([data-theme="light"]) .themeOption{background:var(--card);color:var(--text);border-color:var(--line)}
+:root[data-theme]:not([data-theme="light"]) .search,:root[data-theme]:not([data-theme="light"]) .smallbtn,:root[data-theme]:not([data-theme="light"]) .iconBtn,:root[data-theme]:not([data-theme="light"]) .utilityBtn,:root[data-theme]:not([data-theme="light"]) .pageChip,:root[data-theme]:not([data-theme="light"]) .pageAction,:root[data-theme]:not([data-theme="light"]) .tab,:root[data-theme]:not([data-theme="light"]) .summaryCard,:root[data-theme]:not([data-theme="light"]) .row,:root[data-theme]:not([data-theme="light"]) .reset,:root[data-theme]:not([data-theme="light"]) .sheet,:root[data-theme]:not([data-theme="light"]) .pageContextMenu{background:var(--card);color:var(--text);border-color:var(--line)}
 :root[data-theme]:not([data-theme="light"]) .choice,:root[data-theme]:not([data-theme="light"]) .action:not(.primary):not(.delete),:root[data-theme]:not([data-theme="light"]) .secondary,:root[data-theme]:not([data-theme="light"]) .closex,:root[data-theme]:not([data-theme="light"]) .savePath,:root[data-theme]:not([data-theme="light"]) .importItem,:root[data-theme]:not([data-theme="light"]) .taskBox,:root[data-theme]:not([data-theme="light"]) .fileSourceHint{background:var(--control);color:var(--text);border-color:var(--line)}
 :root[data-theme]:not([data-theme="light"]) .field input,:root[data-theme]:not([data-theme="light"]) .field select,:root[data-theme]:not([data-theme="light"]) .taskBox textarea,:root[data-theme]:not([data-theme="light"]) .importItem input[type=text],:root[data-theme]:not([data-theme="light"]) .importItem select{background:var(--card);color:var(--text);border-color:var(--line)}
 :root[data-theme]:not([data-theme="light"]) .check{background:var(--control);border-color:var(--muted)}
 :root[data-theme]:not([data-theme="light"]) .row.done .tag{color:var(--muted)}
 :root[data-theme]:not([data-theme="light"]) .empty{background:var(--card);border-color:var(--line)}
 :root[data-theme]:not([data-theme="light"]) .tab.active,:root[data-theme]:not([data-theme="light"]) .choice.active,:root[data-theme]:not([data-theme="light"]) .pageChip.active{background:var(--soft);color:var(--accent-strong);border-color:var(--accent)}
-:root[data-theme]:not([data-theme="light"]) .themeOption.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(168,140,255,.2)}
 :root[data-theme]:not([data-theme="light"]) .reset{color:#ffb1aa;border-color:#6e4144}
 :root[data-theme]:not([data-theme="light"]) ::placeholder{color:var(--muted);opacity:.85}
 @media (min-width:700px){
@@ -224,25 +262,28 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <div class="top">
     <div class="titleRow">
       <h1 id="docTitle">КИП — чек-лист</h1>
-      <button class="titleEdit" id="editTitleBtn" aria-label="Редактировать название документа" title="Редактировать название">✏️</button>
+      <div class="titleActions" aria-label="Настройки вида документа">
+        <button class="iconBtn" id="editTitleBtn" aria-label="Редактировать название документа" title="Редактировать название"><span aria-hidden="true">✎</span></button>
+        <button class="iconBtn" id="fontBtn" aria-label="Выбрать шрифт" title="Шрифт"><span id="fontIcon" aria-hidden="true">Aa</span></button>
+        <button class="iconBtn" id="themeBtn" aria-label="Сменить тему" title="Сменить тему"><span id="themeIcon" aria-hidden="true">☼</span></button>
+      </div>
     </div>
     <div class="sub" id="lastSaved">Сохранено на устройстве: —</div>
     <div class="controls">
       <input id="search" class="search" type="search" placeholder="Поиск по тегу или установке">
-      <button class="smallbtn" id="fontMinus" aria-label="Уменьшить шрифт">A−</button>
-      <button class="smallbtn" id="fontPlus" aria-label="Увеличить шрифт">A+</button>
+      <button class="smallbtn" id="fontMinus" aria-label="Уменьшить шрифт" title="Уменьшить шрифт"><span aria-hidden="true">−</span><small>A</small></button>
+      <button class="smallbtn" id="fontPlus" aria-label="Увеличить шрифт" title="Увеличить шрифт"><span aria-hidden="true">+</span><small>A</small></button>
     </div>
     <div class="utilityRow" aria-label="Действия с документом">
       <button class="utilityBtn" id="newDoc" type="button">Новый файл</button>
       <button class="utilityBtn" id="saveHtml" type="button">Сохранить</button>
       <button class="utilityBtn" id="shareHtml" type="button">Отправить</button>
-      <button class="utilityBtn" id="themeBtn" type="button">Тема</button>
     </div>
     <div class="pageBar" aria-label="Страницы чек-листа">
-      <div class="pageStrip" id="pageStrip"></div>
-      <button class="pageAction" id="addPageBtn" type="button">+ Страница</button>
-      <button class="pageAction" id="renamePageBtn" type="button" aria-label="Переименовать текущую страницу">✎</button>
+      <div class="pageViewport"><div class="pageStrip" id="pageStrip"></div></div>
+      <button class="pageAction addPageAction" id="addPageBtn" type="button" aria-label="Добавить страницу" title="Добавить страницу"><span aria-hidden="true">+</span></button>
     </div>
+
     <div class="tabs" id="tabs"></div>
   </div>
   <section class="summaryCard" aria-label="Прогресс чек-листа">
@@ -314,9 +355,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     </div>
 
     <div id="photoForm" style="display:none">
-      <div class="mini">Фото можно распознавать напрямую с Android/iPhone через OCR.space — без компьютера и локального backend. Для постоянного использования можно указать свой API-ключ. После распознавания все теги можно проверить и исправить перед добавлением.</div>
-      <button type="button" class="secondary" id="ocrConfigBtn" style="margin-top:8px">⚙️ Настроить OCR</button>
+      <div class="mini">Фото распознаётся через Google Gemini Vision для теста, при ошибке используется OCR.space. API-ключ Gemini хранится только на этом устройстве. После распознавания все теги можно проверить и исправить перед добавлением.</div>
+      <button type="button" class="secondary" id="ocrConfigBtn" style="margin-top:8px">⚙️ Настроить Gemini</button>
       <div class="mini" id="ocrConfigStatus" style="margin-top:6px"></div>
+      <div class="mini" style="margin-top:4px">Тестовый режим: ключ используется прямо в браузере и сохраняется только в localStorage этого устройства. Для постоянной версии нужен backend-прокси.</div>
       <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none">
       <input id="photoInput" type="file" accept="image/*" style="display:none">
       <button class="action" id="ocrBackBtn" type="button" style="width:100%;margin-top:10px">← Выбрать другой способ</button>
@@ -340,6 +382,18 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         <button class="action" id="cancelFileImportBtn" type="button">Отмена</button>
         <button class="action primary" id="fileImportBtn" type="button">Добавить теги</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="duplicateOverlay">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="duplicateTitle">
+    <button class="closex" id="duplicateCloseBtn" type="button" aria-label="Закрыть">×</button>
+    <h2 id="duplicateTitle">Дубликат тега</h2>
+    <div class="duplicateMessage" id="duplicateMessage"></div>
+    <div class="actions duplicateActions">
+      <button class="action" id="duplicateEditBtn" type="button">Изменить тег</button>
+      <button class="action delete" id="duplicateDeleteBtn" type="button">Удалить существующий</button>
     </div>
   </div>
 </div>
@@ -371,16 +425,36 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   </div>
 </div>
 
-<div class="overlay" id="themeOverlay">
-  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="themeTitle">
-    <button class="closex" id="themeCloseBtn" type="button" aria-label="Закрыть выбор темы">×</button>
-    <h2 id="themeTitle">Оформление</h2>
-    <div class="mini" style="margin:-5px 0 12px">Тема сохраняется на этом устройстве и не влияет на данные чек-листа.</div>
-    <div class="themeGrid" id="themeGrid">
-      <button class="themeOption" data-theme-choice="light" type="button"><span class="themeSwatch light"></span>Светлая</button>
-      <button class="themeOption" data-theme-choice="navy" type="button"><span class="themeSwatch navy"></span>Тёмно-синяя</button>
-      <button class="themeOption" data-theme-choice="violet" type="button"><span class="themeSwatch violet"></span>Тёмно-фиолетовая</button>
-      <button class="themeOption" data-theme-choice="green" type="button"><span class="themeSwatch green"></span>Тёмно-зелёная</button>
+<div class="pageContextMenu" id="pageContextMenu" role="menu" aria-hidden="true">
+  <button type="button" id="ctxEditPage">✎ Изменить</button>
+  <button type="button" id="ctxSelectAllPages">☷ Выбрать все</button>
+  <div class="menuSep"></div>
+  <button type="button" id="ctxDeleteSelected" class="danger">🗑 Удалить выбранные</button>
+  <button type="button" id="ctxDoneManage">← Назад</button>
+</div>
+
+<div class="overlay" id="fontOverlay">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="fontTitle">
+    <button class="closex" id="fontCloseBtn" type="button" aria-label="Закрыть">×</button>
+    <h2 id="fontTitle">Шрифт</h2>
+    <div class="mini" style="margin-bottom:10px">Выбери шрифт для всех текстов приложения.</div>
+    <div class="fontChoiceGrid" id="fontChoiceGrid"></div>
+  </div>
+</div>
+
+<div class="overlay" id="exportOverlay">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+    <button class="closex" id="exportCloseBtn" type="button" aria-label="Закрыть">×</button>
+    <h2 id="exportTitle">Отправить</h2>
+    <div class="mini" style="margin-bottom:10px">Выбери, что передать. После выбора смартфон откроет стандартное меню приложений.</div>
+    <div class="exportMenu">
+      <button class="choice" id="exportFileBtn" type="button"><span class="ico">📄</span>Текущий файл</button>
+      <button class="choice" id="exportAllBtn" type="button"><span class="ico">☷</span>Весь список</button>
+      <button class="choice" id="exportDoneBtn" type="button"><span class="ico">✓</span>Выполненные</button>
+      <button class="choice" id="exportTodoBtn" type="button"><span class="ico">○</span>Невыполненные</button>
+      <button class="choice" id="exportPagesBtn" type="button"><span class="ico">≡</span>Титулы</button>
+      <div class="exportSectionLabel">Страницы</div>
+      <div id="exportPageButtons" class="exportPageButtons"></div>
     </div>
   </div>
 </div>
@@ -389,13 +463,19 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
 <script>
 const INITIAL_DATA = [{"id": 1, "unit": "2131", "tag": "2131-PZT-414A", "done": false}, {"id": 2, "unit": "2131", "tag": "2131-PZT-414B", "done": false}, {"id": 3, "unit": "2131", "tag": "2131-PZT-414C", "done": false}, {"id": 4, "unit": "2131", "tag": "2131-PDZT-426B", "done": false}, {"id": 5, "unit": "2131", "tag": "2131-PDZT-426C", "done": false}, {"id": 6, "unit": "2131", "tag": "2131-PDZT-426A", "done": false}, {"id": 7, "unit": "2131", "tag": "2131-TZT-600B", "done": false}, {"id": 8, "unit": "2131", "tag": "2131-TZT-600A", "done": false}, {"id": 9, "unit": "2131", "tag": "2131-TZE-600C", "done": false}, {"id": 10, "unit": "2131", "tag": "2131-TZE-600B", "done": false}, {"id": 11, "unit": "2131", "tag": "2131-TZE-600A", "done": false}, {"id": 12, "unit": "2131", "tag": "2131-TZT-600C", "done": false}, {"id": 13, "unit": "2131", "tag": "2131-TZT-601C", "done": false}, {"id": 14, "unit": "2131", "tag": "2131-TZE-601B", "done": false}, {"id": 15, "unit": "2131", "tag": "2131-TZE-601C", "done": false}, {"id": 16, "unit": "2131", "tag": "2131-TZE-601A", "done": false}, {"id": 17, "unit": "2131", "tag": "2131-TZT-601B", "done": false}, {"id": 18, "unit": "2131", "tag": "2131-TZT-601A", "done": false}, {"id": 19, "unit": "2131", "tag": "2131-TZT-692", "done": false}, {"id": 20, "unit": "2131", "tag": "2131-TZT-693", "done": false}, {"id": 21, "unit": "2132", "tag": "2132-PZIT-417C", "done": true}, {"id": 22, "unit": "2132", "tag": "2132-PZIT-417B", "done": true}, {"id": 23, "unit": "2132", "tag": "2132-PZIT-417A", "done": true}, {"id": 24, "unit": "2132", "tag": "2132-PZIT-426A", "done": true}, {"id": 25, "unit": "2132", "tag": "2132-PZIT-426C", "done": true}, {"id": 26, "unit": "2132", "tag": "2132-PZIT-426B", "done": true}, {"id": 27, "unit": "2132", "tag": "2132-PZIT-431B", "done": true}, {"id": 28, "unit": "2132", "tag": "2132-PZIT-431A", "done": true}, {"id": 29, "unit": "2132", "tag": "2132-PZIT-431C", "done": true}, {"id": 30, "unit": "2132", "tag": "2132-PZIT-456C", "done": true}, {"id": 31, "unit": "2132", "tag": "2132-PZIT-456B", "done": true}, {"id": 32, "unit": "2132", "tag": "2132-PZIT-456A", "done": true}, {"id": 33, "unit": "2611", "tag": "2611-PZT-404A", "done": true}, {"id": 34, "unit": "2611", "tag": "2611-PZT-404C", "done": true}, {"id": 35, "unit": "2611", "tag": "2611-PZT-404B", "done": true}, {"id": 36, "unit": "2611", "tag": "2611-TZE-602B", "done": false}, {"id": 37, "unit": "2611", "tag": "2611-TZE-602A", "done": false}, {"id": 38, "unit": "2611", "tag": "2611-TZT-602C", "done": false}, {"id": 39, "unit": "2611", "tag": "2611-TZT-602B", "done": false}, {"id": 40, "unit": "2611", "tag": "2611-TZT-602A", "done": false}, {"id": 41, "unit": "2611", "tag": "2611-TZE-602C", "done": false}, {"id": 42, "unit": "2611", "tag": "2611-TZE-619C", "done": false}, {"id": 43, "unit": "2611", "tag": "2611-TZE-619B", "done": false}, {"id": 44, "unit": "2611", "tag": "2611-TZE-619A", "done": false}, {"id": 45, "unit": "2611", "tag": "2611-TZT-619C", "done": false}, {"id": 46, "unit": "2611", "tag": "2611-TZT-619B", "done": false}, {"id": 47, "unit": "2611", "tag": "2611-TZT-619A", "done": false}, {"id": 48, "unit": "2611", "tag": "2611-TZT-639B", "done": false}, {"id": 49, "unit": "2611", "tag": "2611-TZE-639C", "done": false}, {"id": 50, "unit": "2611", "tag": "2611-TZE-639B", "done": false}, {"id": 51, "unit": "2611", "tag": "2611-TZE-639A", "done": false}, {"id": 52, "unit": "2611", "tag": "2611-TZT-639C", "done": false}, {"id": 53, "unit": "2611", "tag": "2611-TZT-639A", "done": false}];
+const INITIAL_PAGES = null;
 const DATA_KEY = "kip-checklist-v11";
 const FONT_KEY = "kip-checklist-font-v1";
+const FONT_FAMILY_KEY = "kip-checklist-font-family-v1";
 const DOC_TITLE_KEY = "kip-checklist-title-v1";
 const PAGES_KEY = "kip-checklist-pages-v21";
 const ACTIVE_PAGE_KEY = "kip-checklist-active-page-v21";
 const THEME_KEY = "kip-checklist-theme-v21";
 const DEFAULT_TITLE = "КИП — чек-лист";
+
+// Не даём браузеру превращать вертикальное вытягивание страницы в pull-to-refresh,
+// если движок поддерживает overscroll-behavior. Обычный вертикальный скролл при этом сохраняется.
+try{document.documentElement.style.overscrollBehaviorY="none";document.body.style.overscrollBehaviorY="none";}catch(_){}
 
 let docTitle = loadDocumentTitle();
 let pages = loadPages();
@@ -403,9 +483,18 @@ let activePageId = loadActivePageId();
 let data = getActivePage().data;
 let filter = "all";
 let query = "";
+let pageManageMode = false;
+let selectedPageIds = new Set();
+let pageLongPressTimer = null;
+let pageLongPressTriggered = false;
 let editId = null;
 let longPressTimer = null;
 let longPressTriggered = false;
+let pendingDuplicate = null;
+let saveTimer = null;
+let contextPageId = null;
+let contextMenuTimer = null;
+let exportMenuMode = "share";
 
 const $ = id => document.getElementById(id);
 const tabs = $("tabs"), list = $("list");
@@ -464,6 +553,11 @@ function loadPages(){
       }
     }
   }catch(e){}
+  if(Array.isArray(INITIAL_PAGES) && INITIAL_PAGES.length){
+    const restored=INITIAL_PAGES.map((page,index)=>({id:String(page.id||createPageId()),name:String(page.name||`Страница ${index+1}`).trim()||`Страница ${index+1}`,data:cloneItems(page.data),updatedAt:page.updatedAt||new Date().toISOString()}));
+    localStorage.setItem(PAGES_KEY,JSON.stringify(restored));
+    return restored;
+  }
   const first={id:createPageId(),name:"Основная страница",data:loadData(),updatedAt:new Date().toISOString()};
   localStorage.setItem(PAGES_KEY,JSON.stringify([first]));
   return [first];
@@ -490,15 +584,127 @@ function renderPages(){
   pages.forEach(page=>{
     const button=document.createElement("button");
     button.type="button";
-    button.className="pageChip"+(page.id===activePageId?" active":"");
-    button.title=page.name;
+    button.className="pageChip"+(page.id===activePageId?" active":"")+(selectedPageIds.has(page.id)?" selected":"");
+    button.title=pageManageMode?"Нажми для выбора страницы":"Нажми для открытия • удерживай для управления";
+    if(pageManageMode){
+      const mark=document.createElement("span");
+      mark.className="pageChipMark";mark.textContent="✓";mark.setAttribute("aria-hidden","true");
+      button.appendChild(mark);
+    }
     const name=document.createElement("span");name.textContent=page.name;
     const count=document.createElement("span");count.className="pageCount";count.textContent=`• ${page.data.length}`;
     button.append(name,count);
-    button.onclick=()=>selectPage(page.id);
+    button.onclick=()=>{
+      if(pageLongPressTriggered){pageLongPressTriggered=false;return;}
+      if(pageManageMode){togglePageSelection(page.id);return;}
+      selectPage(page.id);
+    };
+    button.addEventListener("selectstart",e=>e.preventDefault());
+    button.addEventListener("dragstart",e=>e.preventDefault());
+    button.addEventListener("touchstart",e=>startPageLongPress(page.id,e),{passive:true});
+    button.addEventListener("touchmove",cancelPageLongPress,{passive:true});
+    button.addEventListener("touchend",cancelPageLongPress,{passive:true});
+    button.addEventListener("touchcancel",cancelPageLongPress,{passive:true});
+    button.addEventListener("contextmenu",e=>{e.preventDefault();cancelPageLongPress();openPageContextMenu(page.id,e.clientX,e.clientY);});
     strip.appendChild(button);
   });
 }
+function startPageLongPress(id){
+  cancelPageLongPress();
+  pageLongPressTriggered=false;
+  pageLongPressTimer=setTimeout(()=>{
+    pageLongPressTriggered=true;
+    enterPageManage(id,false);
+    openPageContextMenu(id,null,null);
+    if(navigator.vibrate)navigator.vibrate(25);
+  },650);
+}
+function cancelPageLongPress(){
+  if(pageLongPressTimer){clearTimeout(pageLongPressTimer);pageLongPressTimer=null;}
+}
+function enterPageManage(id,selectAll=false){
+  pageManageMode=true;
+  selectedPageIds=selectAll?new Set(pages.map(page=>page.id)):new Set([id]);
+  renderPages();
+}
+function exitPageManage(){
+  pageManageMode=false;
+  selectedPageIds.clear();
+  closePageContextMenu();
+  renderPages();
+}
+function togglePageSelection(id){
+  if(selectedPageIds.has(id))selectedPageIds.delete(id);
+  else selectedPageIds.add(id);
+  renderPages();
+}
+function selectAllPages(){
+  if(selectedPageIds.size===pages.length)selectedPageIds.clear();
+  else selectedPageIds=new Set(pages.map(page=>page.id));
+  renderPages();
+}
+function editSelectedPage(){
+  if(selectedPageIds.size!==1)return;
+  const id=[...selectedPageIds][0],page=pages.find(item=>item.id===id);
+  if(!page)return;
+  const name=prompt("Название страницы",page.name);
+  if(name===null)return;
+  const clean=name.replace(/\s+/g," ").trim();
+  if(!clean){showToast("Название не изменено");return;}
+  page.name=clean.slice(0,60);page.updatedAt=new Date().toISOString();
+  persistPages();exitPageManage();showToast("Название страницы сохранено");
+}
+function editPageById(id){
+  const page=pages.find(item=>item.id===id);
+  if(!page)return;
+  const name=prompt("Название страницы",page.name);
+  if(name===null)return;
+  const clean=name.replace(/\s+/g," ").trim();
+  if(!clean){showToast("Название не изменено");return;}
+  page.name=clean.slice(0,60);page.updatedAt=new Date().toISOString();
+  persistPages();closePageContextMenu();renderPages();showToast("Название страницы сохранено");
+}
+function deleteSelectedPages(){
+  const ids=[...selectedPageIds];
+  if(!ids.length)return;
+  const names=pages.filter(p=>ids.includes(p.id)).map(p=>p.name);
+  if(!confirm(`Удалить ${ids.length} ${ids.length===1?"страницу":"страницы"}?\n\n${names.slice(0,5).join("\n")}${names.length>5?"\n…":""}`))return;
+  pages=pages.filter(page=>!selectedPageIds.has(page.id));
+  if(!pages.length){
+    const fresh={id:createPageId(),name:"Основная страница",data:[],updatedAt:new Date().toISOString()};
+    pages=[fresh];activePageId=fresh.id;data=fresh.data;
+  }else if(!pages.some(page=>page.id===activePageId)){
+    const next=pages[0];activePageId=next.id;data=next.data;
+  }
+  filter="all";query="";
+  if($("search"))$("search").value="";
+  persistPages();pageManageMode=false;selectedPageIds.clear();closePageContextMenu();render();
+  showToast(ids.length===1?"Страница удалена":"Страницы удалены");
+}
+function deletePageById(id){
+  selectedPageIds=new Set([id]);
+  deleteSelectedPages();
+}
+function openPageContextMenu(id,x,y){
+  const menu=$("pageContextMenu");
+  if(!menu)return;
+  contextPageId=id;
+  menu.classList.add("show");menu.setAttribute("aria-hidden","false");
+  $("ctxDeleteSelected").disabled=selectedPageIds.size===0;
+  $("ctxDeleteSelected").style.opacity=selectedPageIds.size?"1":".45";
+  $("ctxDoneManage").style.display="block";
+  const rect=menu.getBoundingClientRect();
+  const px=(x==null?Math.round(window.innerWidth/2):x);
+  const py=(y==null?Math.round(window.innerHeight*.48):y);
+  menu.style.left=Math.max(8,Math.min(px,window.innerWidth-rect.width-8))+"px";
+  menu.style.top=Math.max(8,Math.min(py,window.innerHeight-rect.height-8))+"px";
+}
+function closePageContextMenu(){
+  const menu=$("pageContextMenu");
+  if(menu){menu.classList.remove("show");menu.setAttribute("aria-hidden","true");}
+  contextPageId=null;
+}
+
 function selectPage(id){
   const page=pages.find(item=>item.id===id);
   if(!page)return;
@@ -526,13 +732,50 @@ function renameActivePage(){
   if(!clean){showToast("Название не изменено");return;}
   page.name=clean.slice(0,60);page.updatedAt=new Date().toISOString();persistPages();render();showToast("Название страницы сохранено");
 }
+function deleteActivePage(){
+  const page=getActivePage();
+  if(!page)return;
+  const isLast=pages.length===1;
+  const message=isLast
+    ? `Удалить страницу «${page.name}»? Это последняя страница. После удаления будет создана пустая новая страница.`
+    : `Удалить страницу «${page.name}»? Все приборы и задания на этой странице будут удалены.`;
+  if(!confirm(message))return;
+  const index=pages.findIndex(item=>item.id===page.id);
+  pages=pages.filter(item=>item.id!==page.id);
+  if(!pages.length){
+    const fresh={id:createPageId(),name:"Основная страница",data:[],updatedAt:new Date().toISOString()};
+    pages=[fresh];
+    activePageId=fresh.id;
+    data=fresh.data;
+  }else{
+    const next=pages[Math.min(index,pages.length-1)];
+    activePageId=next.id;
+    data=next.data;
+  }
+  filter="all";query="";
+  if($("search"))$("search").value="";
+  persistPages();render();showToast(isLast?"Страница удалена • создана новая пустая":"Страница удалена");
+}
 function save(){
   const page=getActivePage();
-  if(page){page.data=data;page.updatedAt=new Date().toISOString();}
+  if(page){
+    page.data=data;
+    page.updatedAt=new Date().toISOString();
+  }
   persistPages();
   localStorage.setItem(DATA_KEY, JSON.stringify(data));
   renderLastSaved();
 }
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>save(),350);
+}
+function flushSave(){
+  clearTimeout(saveTimer);
+  save();
+}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")flushSave();});
+window.addEventListener("pagehide",flushSave);
 function uniqueUnits(){
   return [...new Set(data.map(x => String(x.unit).trim()).filter(Boolean))];
 }
@@ -670,10 +913,25 @@ function openEdit(id){
 }
 function closeModal(){overlay.classList.remove("show");editId=null;}
 function normalizeUnit(v){return v.trim().replace(/^Unit\\s*/i,"");}
+function tagKey(v){
+  return String(v||"").toUpperCase().replace(/[–—−_]/g,"-").replace(/\s+/g,"").trim();
+}
+function findDuplicateTag(tag,ignoreId=null){
+  const key=tagKey(tag);
+  return data.find(item=>tagKey(item.tag)===key && item.id!==ignoreId)||null;
+}
+function openDuplicateDialog(duplicate,pending){
+  pendingDuplicate={duplicateId:duplicate.id,pending};
+  $("duplicateMessage").innerHTML=`Тег <strong>${escapeHtml(pending.tag)}</strong> уже есть в списке (позиция №${duplicate.id}, ${escapeHtml(duplicate.tag)}).<br><br>Измени новый тег или удали существующую запись, если она больше не нужна.`;
+  $("duplicateOverlay").classList.add("show");
+}
+function closeDuplicateDialog(){pendingDuplicate=null;$("duplicateOverlay").classList.remove("show");}
 function saveModal(){
-  const unit=normalizeUnit(unitInput.value), tag=tagInput.value.trim();
-  if(!unit || !tag){showToast("Заполни Unit и Tag Number");return;}
+  const unit=normalizeUnit(unitInput.value),tag=tagInput.value.trim().toUpperCase();
+  if(!unit||!tag){showToast("Заполни Unit и Tag Number");return;}
   const done=statusInput.value==="done";
+  const duplicate=findDuplicateTag(tag,editId);
+  if(duplicate){openDuplicateDialog(duplicate,{unit,tag,done,editId});return;}
   if(editId!==null){
     const item=data.find(x=>x.id===editId);
     if(item){item.unit=unit;item.tag=tag;item.done=done;}
@@ -707,42 +965,66 @@ function makeFileTimestamp(){
   return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${String(d.getFullYear()).slice(-2)}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
 }
 
+let pullGuardStartY=0;
+document.addEventListener("touchstart",e=>{
+  if(e.touches?.length!==1)return;
+  pullGuardStartY=e.touches[0].clientY;
+},{passive:true});
+document.addEventListener("touchmove",e=>{
+  if(e.touches?.length!==1)return;
+  const dy=e.touches[0].clientY-pullGuardStartY;
+  if(window.scrollY<=0 && dy>8 && !e.target.closest(".pageStrip,.tabs,.importList,.taskBox textarea,.sheet")){
+    e.preventDefault();
+  }
+},{passive:false});
+
 let selectedDirectory=null;
 let selectedDirectoryName="";
-let newDocumentMode=false;
 
-function openSaveDialog(isNew=false){
-  newDocumentMode=isNew;
-  $("fileNameInput").value = isNew
-    ? docTitle
-    : (localStorage.getItem("kip-last-file-name") || docTitle);
-  $("pathLabel").textContent = selectedDirectoryName || "Не выбран";
-  $("saveOverlay").querySelector("h2").textContent = isNew
-    ? "Создать новый документ"
-    : "Сохранить новую версию";
-  $("saveHint").textContent = isNew
-    ? "Будет создан чистый документ с тем же функционалом: добавление вручную, фото/OCR, редактирование, удаление и сохранение."
-    : (window.showDirectoryPicker
-      ? "На поддерживаемых браузерах можно выбрать папку напрямую."
-      : "На iPhone Safari папку выбирают через системное окно «Поделиться → Сохранить в Файлы».");
+function openBlankNewDocument(){
+  save();
+  const {html:exported}=buildExportHtml([]);
+  let tab=null;
+  try{tab=window.open("about:blank","_blank");}catch(_){}
+  if(!tab){
+    showToast("Браузер не разрешил открыть новую вкладку");
+    return;
+  }
+  try{
+    tab.document.open();
+    tab.document.write(exported);
+    tab.document.close();
+  }catch(_){
+    try{tab.close();}catch(__){}
+    showToast("Не удалось открыть новый документ");
+  }
+}
+
+function openSaveDialog(){
+  $("fileNameInput").value=localStorage.getItem("kip-last-file-name") || docTitle;
+  $("pathLabel").textContent=selectedDirectoryName || "Не выбран";
+  $("saveOverlay").querySelector("h2").textContent="Сохранить новую версию";
+  $("saveHint").textContent=window.showDirectoryPicker
+    ? "На поддерживаемых браузерах можно выбрать папку напрямую."
+    : "На iPhone Safari папку выбирают через системное окно «Поделиться → Сохранить в Файлы».";
   $("saveOverlay").classList.add("show");
   setTimeout(()=>$("fileNameInput").focus(),50);
 }
 function closeSaveDialog(){
   $("saveOverlay").classList.remove("show");
-  newDocumentMode=false;
 }
 
 function buildExportHtml(exportData=data){
   const stamp=makeTimestamp();
   const currentJson=JSON.stringify(exportData, null, 2).replace(/</g,"\\u003c");
+  const pagesJson=JSON.stringify(pages, null, 2).replace(/</g,"\\u003c");
   const uniqueKey="kip-checklist-saved-"+Date.now();
 
   // Сохраняем чистую копию приложения, а не текущее состояние интерфейса.
   // Поэтому открытые меню, модальные окна, OCR-кандидаты и уведомления
   // никогда не попадают в сохранённый HTML.
   const clone=document.documentElement.cloneNode(true);
-  ["overlay","saveOverlay","themeOverlay"].forEach(id=>{
+  ["overlay","saveOverlay","exportOverlay","fontOverlay"].forEach(id=>{
     const el=clone.querySelector("#"+id);
     if(el){ el.classList.remove("show"); el.style.removeProperty("display"); }
   });
@@ -759,9 +1041,12 @@ function buildExportHtml(exportData=data){
   const escapedTitle=JSON.stringify(docTitle).replace(/</g,"\\u003c");
   exported=exported.replace(/<title>.*?<\/title>/s, `<title>${docTitle.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</title>`);
   exported=exported.replace(
-    /const INITIAL_DATA = .*?;\nconst DATA_KEY = ".*?";\nconst FONT_KEY = ".*?";\nconst DOC_TITLE_KEY = ".*?";\nconst PAGES_KEY = ".*?";\nconst ACTIVE_PAGE_KEY = ".*?";\nconst THEME_KEY = ".*?";\nconst DEFAULT_TITLE = ".*?";/s,
-    `const INITIAL_DATA = ${currentJson};\nconst DATA_KEY = "${uniqueKey}";\nconst FONT_KEY = "kip-checklist-font-v1";\nconst DOC_TITLE_KEY = "kip-checklist-title-v1";\nconst PAGES_KEY = "${uniqueKey}-pages";\nconst ACTIVE_PAGE_KEY = "${uniqueKey}-active-page";\nconst THEME_KEY = "${uniqueKey}-theme";\nconst DEFAULT_TITLE = ${escapedTitle};`
+    /const INITIAL_DATA = .*?;\nconst INITIAL_PAGES = .*?;\nconst DATA_KEY = ".*?";\nconst FONT_KEY = ".*?";\nconst FONT_FAMILY_KEY = ".*?";\nconst DOC_TITLE_KEY = ".*?";\nconst PAGES_KEY = ".*?";\nconst ACTIVE_PAGE_KEY = ".*?";\nconst THEME_KEY = ".*?";\nconst DEFAULT_TITLE = ".*?";/s,
+    `const INITIAL_DATA = ${currentJson};\nconst INITIAL_PAGES = ${pagesJson};\nconst DATA_KEY = "${uniqueKey}";\nconst FONT_KEY = "kip-checklist-font-v1";\nconst FONT_FAMILY_KEY = "kip-checklist-font-family-v1";\nconst DOC_TITLE_KEY = "kip-checklist-title-v1";\nconst PAGES_KEY = "${uniqueKey}-pages";\nconst ACTIVE_PAGE_KEY = "${uniqueKey}-active-page";\nconst THEME_KEY = "${uniqueKey}-theme";\nconst DEFAULT_TITLE = ${escapedTitle};`
   );
+  const selectedFamily=JSON.stringify(localStorage.getItem(FONT_FAMILY_KEY)||"system");
+  exported=exported.replace(/const DEFAULT_TITLE = .*?;/s, match=>match+`\nconst EXPORTED_FONT_FAMILY = ${selectedFamily};`);
+  exported=exported.replace(/const savedFontFamily=localStorage.getItem\(FONT_FAMILY_KEY\)\|\|"system";/, 'const savedFontFamily=typeof EXPORTED_FONT_FAMILY!=="undefined"?EXPORTED_FONT_FAMILY:(localStorage.getItem(FONT_FAMILY_KEY)||"system");');
   return {html:exported, stamp};
 }
 async function chooseSaveFolder(){
@@ -788,8 +1073,8 @@ function safeFileBase(name){
 
 async function saveNow(){
   const base=safeFileBase($("fileNameInput").value);
-  if(!newDocumentMode)save();
-  const exportData=newDocumentMode ? [] : data;
+  save();
+  const exportData=data;
   const {html:exported,stamp}=buildExportHtml(exportData);
   const fileName=`${base} — ${stamp}.html`;
   localStorage.setItem("kip-last-file-name",base);
@@ -827,7 +1112,8 @@ async function saveNow(){
     const a=document.createElement("a"); a.href=url; a.download=fileName;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1500);
-    closeSaveDialog(); showToast(`Сохранено: ${fileName}`);
+    closeSaveDialog();
+    showToast(`Сохранено: ${fileName}`);
   }catch(e){
     if(e.name!=="AbortError") showToast("Сохранение отменено или недоступно");
   }
@@ -835,29 +1121,107 @@ async function saveNow(){
 
 
 
+function renderExportPageButtons(){
+  const wrap=$("exportPageButtons");
+  if(!wrap)return;
+  wrap.innerHTML="";
+  pages.forEach((page,index)=>{
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="choice";
+    button.innerHTML=`<span class="ico">${index===0?"⌂":"≡"}</span>${escapeHtml(page.name||`Страница ${index+1}`)}`;
+    button.addEventListener("click",()=>sharePageReport(page.id));
+    wrap.appendChild(button);
+  });
+}
+function openExportMenu(mode="share"){
+  exportMenuMode=mode;
+  $("exportTitle").textContent=mode==="save"?"Сохранить":"Отправить";
+  renderExportPageButtons();
+  $("exportOverlay").classList.add("show");
+}
+function closeExportMenu(){ $("exportOverlay").classList.remove("show"); }
+function reportHeader(){
+  const total=pages.reduce((n,p)=>n+p.data.length,0);
+  const done=pages.reduce((n,p)=>n+p.data.filter(x=>x.done).length,0);
+  return `${docTitle}\nВсего: ${total} | Выполнено: ${done} | Невыполнено: ${total-done}`;
+}
+function pageTitleForReport(page){
+  const name=(page?.name||"").trim();
+  return name||"Без названия";
+}
+function formatReportItems(items){
+  const mark=item=>item.done?"✔️":"О";
+  return items.map((item,index)=>{
+    const task=String(item.task||"").trim().replace(/\s*[\r\n]+\s*/g," ");
+    return `${index+1}. ${mark(item)} ${item.tag}${task?` — ${task}`:""}`;
+  }).join("\n");
+}
+function buildGroupedTextReport(kind="all"){
+  const sections=[];
+  let number=1;
+  for(const page of pages){
+    const items=page.data.filter(item=>kind==="all"||(kind==="done"?item.done:!item.done));
+    if(!items.length)continue;
+    const numbered=items.map(item=>{
+      const mark=item.done?"✔️":"О";
+      const task=String(item.task||"").trim().replace(/\s*[\r\n]+\s*/g," ");
+      return `${number++}. ${mark} ${item.tag}${task?` — ${task}`:""}`;
+    }).join("\n");
+    sections.push(`=== ${pageTitleForReport(page)} ===\n${numbered}`);
+  }
+  return [reportHeader(),"",...sections].join("\n\n");
+}
+function buildPageTextReport(page){
+  if(!page)return reportHeader();
+  return [reportHeader(),"",`=== ${pageTitleForReport(page)} ===`,page.data.length?formatReportItems(page.data):"Нет приборов"].join("\n\n");
+}
+function buildTitlesReport(){
+  return [reportHeader(),"",...pages.map((page,index)=>`${index+1}. ${pageTitleForReport(page)}`)].join("\n");
+}
+async function shareTextPayload(title,text){
+  closeExportMenu();
+  try{
+    if(navigator.share){await navigator.share({title,text});showToast("Текст передан");return;}
+    if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(text);showToast("Текст скопирован");return;}
+    throw new Error("share-unavailable");
+  }catch(e){if(e.name!=="AbortError")showToast("Не удалось передать текст");}
+}
+async function shareTextReport(kind){
+  const labels={all:"Весь список",done:"Выполненные",todo:"Невыполненные",pages:"Титулы"};
+  const text=kind==="pages"?buildTitlesReport():buildGroupedTextReport(kind);
+  await shareTextPayload(`${docTitle} — ${labels[kind]}`,text);
+}
+async function sharePageReport(pageId){
+  const page=pages.find(p=>p.id===pageId);
+  if(!page)return;
+  await shareTextPayload(`${docTitle} — ${pageTitleForReport(page)}`,buildPageTextReport(page));
+}
 async function shareCurrentDocument(){
   const {html:exported,stamp}=buildExportHtml(data);
-  const fileName=`КИП-чек-лист — ${stamp}.html`;
+  const fileName=`${safeFileBase(docTitle)} — ${stamp}.html`;
   const file=new File([exported],fileName,{type:"text/html"});
+  closeExportMenu();
   try{
     if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
-      await navigator.share({title:fileName,text:"КИП — чек-лист",files:[file]});
-      showToast("Документ отправлен");
-      return;
+      await navigator.share({title:fileName,files:[file]});
+      showToast("Файл передан");return;
     }
     const url=URL.createObjectURL(file);
-    const a=document.createElement("a"); a.href=url; a.download=fileName;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),1500);
-    showToast("Документ подготовлен");
-  }catch(e){
-    if(e.name!=="AbortError") showToast("Не удалось отправить документ");
-  }
+    const a=document.createElement("a");a.href=url;a.download=fileName;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);showToast("Файл подготовлен");
+  }catch(e){if(e.name!=="AbortError")showToast("Не удалось передать файл");}
+}
+function handleExportFile(){
+  closeExportMenu();
+  if(exportMenuMode==="save")openSaveDialog();
+  else shareCurrentDocument();
 }
 
 
 let addMode="manual";
 let ocrCandidates=[];
+let ocrRunToken=0;
 
 function setAddMode(mode){
   addMode=mode;
@@ -919,22 +1283,24 @@ function extractTagsFromOCR(text){
 }
 function knownTags(){ return data.map(x=>x.tag).filter(Boolean); }
 function updateOcrConfigStatus(){
+  const gemini=localStorage.getItem('kipGeminiApiKey')||'';
   const key=localStorage.getItem('kipOcrSpaceKey')||'helloworld';
   const backend=localStorage.getItem('kipOcrApiUrl')||'';
-  if(backend) $("ocrConfigStatus").textContent=`Режим: Google Vision backend (${backend})`;
-  else if(key==='helloworld') $("ocrConfigStatus").textContent='Режим: OCR.space Engine 2 → 3 • без ПК';
-  else $("ocrConfigStatus").textContent='Режим: OCR.space Engine 2 → 3 • ваш API-ключ';
+  if(gemini) $("ocrConfigStatus").textContent='Режим: Google Gemini Vision → OCR.space fallback • ключ сохранён на устройстве';
+  else if(backend) $("ocrConfigStatus").textContent=`Режим: Google Vision backend (${backend})`;
+  else if(key==='helloworld') $("ocrConfigStatus").textContent='Gemini не настроен • резерв OCR.space только при HTTPS';
+  else $("ocrConfigStatus").textContent='Gemini не настроен • резерв OCR.space • ваш API-ключ';
 }
 function configureOcr(){
-  const current=localStorage.getItem('kipOcrSpaceKey')||'helloworld';
-  const key=prompt('API-ключ OCR.space. Для быстрого теста оставьте helloworld. Для постоянной работы лучше использовать свой бесплатный ключ.',current);
+  const current=localStorage.getItem('kipGeminiApiKey')||'';
+  const key=prompt('API-ключ Google Gemini для теста. Получи его в Google AI Studio. Оставь пустым, чтобы использовать только OCR.space.',current);
   if(key===null)return;
   const clean=key.trim();
-  if(clean) localStorage.setItem('kipOcrSpaceKey',clean); else localStorage.removeItem('kipOcrSpaceKey');
+  if(clean) localStorage.setItem('kipGeminiApiKey',clean); else localStorage.removeItem('kipGeminiApiKey');
   updateOcrConfigStatus();
 }
 function setProgress(v){ $('ocrBar').style.width=Math.max(0,Math.min(100,v))+'%'; }
-async function fileToJpeg(file,maxSide=1800,quality=.76){
+async function fileToJpeg(file,maxSide=1800,quality=.76,maxBytes=900*1024){
   return new Promise((resolve,reject)=>{
     const img=new Image(), url=URL.createObjectURL(file);
     img.onload=async()=>{
@@ -950,12 +1316,12 @@ async function fileToJpeg(file,maxSide=1800,quality=.76){
           const ctx=c.getContext('2d',{alpha:false});
           ctx.drawImage(img,0,0,c.width,c.height);
           blob=await new Promise(r=>c.toBlob(r,'image/jpeg',q));
-          if(blob && blob.size<=900*1024) break;
+          if(blob && blob.size<=maxBytes) break;
           side=Math.round(side*.82); q=Math.max(.58,q-.05);
         }
         URL.revokeObjectURL(url);
         if(!blob) return reject(new Error('Не удалось подготовить изображение'));
-        if(blob.size>1024*1024) return reject(new Error('Фото слишком большое для OCR. Попробуй снять ближе или использовать «Загрузка фото».'));
+        if(blob.size>maxBytes && maxBytes<=900*1024) return reject(new Error('Фото слишком большое для OCR. Попробуй снять ближе или использовать «Загрузка фото».'));
         resolve(blob);
       }catch(e){URL.revokeObjectURL(url);reject(e)}
     };
@@ -963,13 +1329,16 @@ async function fileToJpeg(file,maxSide=1800,quality=.76){
     img.src=url;
   });
 }
+async function fileToGeminiJpeg(file){
+  return fileToJpeg(file,2000,.84,1800*1024);
+}
 function fetchWithTimeout(url,options={},timeoutMs=35000){
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),timeoutMs);
   return fetch(url,{...options,signal:controller.signal})
     .finally(()=>clearTimeout(timer))
     .catch(e=>{
-      if(e && e.name==='AbortError') throw new Error('OCR не ответил за 35 секунд. Повторяю более быстрым режимом…');
+      if(e && e.name==='AbortError') throw new Error('Сервис распознавания не ответил вовремя. Попробуй ещё раз или используй резервный OCR.');
       throw e;
     });
 }
@@ -999,62 +1368,162 @@ function extractTagsSmart(text){
   }
   return [...found];
 }
+async function runGeminiVision(image){
+  const apiKey=localStorage.getItem('kipGeminiApiKey')||'';
+  if(!apiKey) throw new Error('Не указан API-ключ Gemini');
+  const tags=[...new Set(knownTags().map(x=>String(x).trim().toUpperCase()).filter(Boolean))];
+  if(!tags.length) throw new Error('В текущем списке нет тегов для сравнения');
+
+  const base64=await new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const value=String(reader.result||'');
+      resolve(value.includes(',')?value.split(',')[1]:value);
+    };
+    reader.onerror=()=>reject(new Error('Не удалось подготовить фото для Gemini'));
+    reader.readAsDataURL(image);
+  });
+
+  const prompt=`Ты распознаёшь КИП-теги на фотографии оборудования.
+Найди ВСЕ чётко читаемые обозначения приборов/тегов на изображении.
+Разрешены ТОЛЬКО теги из списка ниже. Не придумывай новые теги и не исправляй номер на ближайший без достаточных оснований.
+Если тег читается неуверенно, лучше не возвращай его.
+Если на фото несколько тегов, верни несколько.
+Список допустимых тегов:
+${tags.join(', ')}
+Верни только найденные теги из этого списка и оценку уверенности от 0 до 1.`;
+
+  const schema={
+    type:'object',
+    properties:{
+      candidates:{
+        type:'array',
+        maxItems:10,
+        items:{
+          type:'object',
+          properties:{
+            tag:{type:'string',enum:tags},
+            confidence:{type:'number',minimum:0,maximum:1}
+          },
+          required:['tag','confidence'],
+          additionalProperties:false
+        }
+      }
+    },
+    required:['candidates'],
+    additionalProperties:false
+  };
+
+  const body={
+    contents:[{
+      parts:[
+        {text:prompt},
+        {inline_data:{mime_type:'image/jpeg',data:base64}}
+      ]
+    }],
+    generationConfig:{
+      temperature:0,
+      responseMimeType:'application/json',
+      responseJsonSchema:schema
+    }
+  };
+
+  const r=await fetchWithTimeout(
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(apiKey),
+    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)},
+    45000
+  );
+  if(!r.ok){
+    let detail='';
+    try{const e=await r.json();detail=e?.error?.message||'';}catch(_){ }
+    throw new Error(`Gemini HTTP ${r.status}${detail?': '+detail:''}`);
+  }
+  const out=await r.json();
+  const text=out?.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
+  if(!text) throw new Error('Gemini не вернул результат');
+  let parsed;
+  try{parsed=JSON.parse(text);}catch(_){throw new Error('Gemini вернул некорректный JSON');}
+
+  const allowed=new Set(tags.map(tagKey));
+  const ranked=(Array.isArray(parsed?.candidates)?parsed.candidates:[])
+    .map(x=>({tag:String(x?.tag||'').trim().toUpperCase(),score:Number(x?.confidence)}))
+    .filter(x=>x.tag && allowed.has(tagKey(x.tag)))
+    .map(x=>({tag:tags.find(t=>tagKey(t)===tagKey(x.tag))||x.tag,score:Number.isFinite(x.score)?Math.max(0,Math.min(1,x.score)):0}))
+    .sort((a,b)=>b.score-a.score);
+  const unique=[];const seen=new Set();
+  for(const x of ranked){const k=tagKey(x.tag);if(!seen.has(k)){seen.add(k);unique.push(x);}}
+  if(!unique.length) throw new Error('Gemini не нашёл уверенно читаемых тегов из текущего списка');
+  ocrCandidates=unique.map(x=>x.tag);
+  window.kipGeminiCandidates=unique;
+  return unique;
+}
+
 async function runOCR(file){
+  const runToken=++ocrRunToken;
   $("ocrProgressWrap").style.display="block"; setProgress(5);
   try{
     $("ocrStatus").textContent="Подготавливаю фото…";
-    const image=await fileToJpeg(file,1800,.76); setProgress(18);
-    const backend=localStorage.getItem('kipOcrApiUrl')||'';
-    if(backend){
-      $("ocrStatus").textContent="Отправка фото в Google Vision…";
-      const fd=new FormData(); fd.append("file",image,"photo.jpg"); fd.append("known_tags",JSON.stringify(knownTags()));
-      const r=await fetchWithTimeout(backend,{method:"POST",body:fd},35000); if(!r.ok)throw new Error(`OCR HTTP ${r.status}`);
-      setProgress(70); const out=await r.json(); ocrCandidates=[...new Set((out.candidates||[]).map(x=>x.tag).filter(Boolean))];
-      setProgress(100); $("ocrStatus").textContent=`OCR backend: найдено кандидатов ${ocrCandidates.length}. Проверь перед добавлением.`; renderImportCandidates(); return;
+    const geminiKey=localStorage.getItem('kipGeminiApiKey')||'';
+    if(geminiKey){
+      try{
+        const geminiImage=await fileToGeminiJpeg(file);
+        if(runToken!==ocrRunToken)return;
+        $("ocrStatus").textContent="Gemini Vision: читаю КИП-теги на фото…";
+        setProgress(28);
+        const ranked=await runGeminiVision(geminiImage);
+        if(runToken!==ocrRunToken)return;
+        setProgress(100);
+        const best=ranked[0];
+        $("ocrStatus").textContent=`Gemini Vision: найдено кандидатов ${ranked.length}. Лучший ${best.tag} (${(best.score*100).toFixed(0)}%). Проверь перед добавлением.`;
+        renderImportCandidates();
+        return;
+      }catch(e){
+        if(runToken!==ocrRunToken)return;
+        console.warn('Gemini failed, falling back to OCR.space',e);
+        $("ocrStatus").textContent=`Gemini не сработал (${e.message}). Переключаюсь на резервный OCR…`;
+        setProgress(20);
+      }
     }
+
+    const image=await fileToJpeg(file,1800,.76,900*1024);
+    if(runToken!==ocrRunToken)return;
     const key=localStorage.getItem('kipOcrSpaceKey')||'helloworld';
     const localPage = location.protocol === 'file:' || location.origin === 'null' || /android\.fileexplorer\.myprovider/i.test(location.origin);
     if(localPage){
-      $("ocrStatus").textContent="⚠️ Страница открыта как локальный файл Android. Такой запуск может блокировать запрос OCR.space. Для OCR открой эту же страницу через HTTPS (GitHub Pages).";
+      $("ocrStatus").textContent=geminiKey
+        ? "Gemini не сработал. Резервный OCR недоступен для локального файла — открой страницу через HTTPS."
+        : "Gemini не настроен. Для распознавания открой страницу через HTTPS и настрой Gemini.";
       setProgress(0);
       return;
     }
     let lastError=null;
-    // Engine 2 is the default/balanced engine and is faster on larger photos.
-    // Engine 3 is used only as a fallback when Engine 2 completes but finds nothing.
     for(const engine of ['2','3']){
       try{
-        $("ocrStatus").textContent=engine==='2' ? "Распознаю OCR.space Engine 2…" : "Engine 2 не нашёл теги — пробую Engine 3…";
+        $("ocrStatus").textContent=engine==='2' ? "Резерв: OCR.space Engine 2…" : "Engine 2 не нашёл теги — пробую Engine 3…";
         setProgress(engine==='2'?25:42);
         const fd=new FormData();
-        fd.append('file',image,'kip-photo.jpg');
-        fd.append('apikey',key);
-        fd.append('language','auto');
-        fd.append('OCREngine',engine);
-        fd.append('isTable','true');
-        fd.append('detectOrientation','true');
-        fd.append('scale','true');
-        fd.append('isOverlayRequired','false');
+        fd.append('file',image,'kip-photo.jpg'); fd.append('apikey',key); fd.append('language','auto'); fd.append('OCREngine',engine); fd.append('isTable','true'); fd.append('detectOrientation','true'); fd.append('scale','true'); fd.append('isOverlayRequired','false');
         const r=await fetchWithTimeout('https://api.ocr.space/parse/image',{method:'POST',body:fd},engine==='2'?20000:30000);
         if(!r.ok)throw new Error(`OCR.space HTTP ${r.status}`);
-        setProgress(engine==='3'?72:82);
-        const out=await r.json();
+        setProgress(engine==='3'?72:82); const out=await r.json();
         if(out.IsErroredOnProcessing) throw new Error(out.ErrorMessage||out.ErrorDetails||'OCR.space error');
         const text=(out.ParsedResults||[]).map(x=>x.ParsedText||'').join('\n');
         ocrCandidates=extractTagsSmart(text);
+        if(runToken!==ocrRunToken)return;
         setProgress(100);
         $("ocrStatus").textContent=`OCR.space Engine ${engine}: найдено кандидатов ${ocrCandidates.length}. Проверь перед добавлением.`;
         renderImportCandidates();
         return;
       }catch(e){
         lastError=e;
-        if(engine==='2') continue;
+        if(engine==='2')continue;
       }
     }
-    throw lastError||new Error('OCR не ответил');
+    throw lastError||new Error('Резервный OCR не ответил');
   }catch(e){
+    if(runToken!==ocrRunToken)return;
     console.error(e); setProgress(0);
-    $("ocrStatus").textContent=`Ошибка OCR: ${e.message||e}. Проверь интернет или укажи свой API-ключ OCR.space в ⚙️ Настроить OCR.`;
+    $("ocrStatus").textContent=`Ошибка распознавания: ${e.message||e}. Проверь интернет и настройки Gemini.`;
   }
 }
 function renderImportCandidates(){
@@ -1066,50 +1535,71 @@ function renderImportCandidates(){
     actions.style.display='none';
     return;
   }
-  const existing=new Set(data.map(x=>String(x.tag||'').toUpperCase()));
+  const existing=new Set(data.map(x=>tagKey(x.tag)));
   ocrCandidates.forEach((candidate,i)=>{
     const tag=String(candidate||'').toUpperCase();
     const unit=(tag.match(/^(\d{4})-/)||[])[1]||'';
-    const already=existing.has(tag);
+    const already=existing.has(tagKey(tag));
     const row=document.createElement('div');
     row.className='importItem';
-    row.innerHTML=`
-      <label style="display:flex;align-items:center;gap:10px;width:100%;">
-        <input type="checkbox" ${already?'':'checked'} ${already?'disabled':''}>
-        <input type="text" value="${tag.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}" style="flex:1;min-width:0;">
-        <select>
-          <option value="todo">Не выполнен</option>
-          <option value="done">Выполнен</option>
-        </select>
-      </label>
-      <div class="mini" style="margin-left:34px;">${already?'Уже есть в списке':''}${unit?' • установка '+unit:''}</div>`;
+    const line=document.createElement('div');
+    line.className='importRow';
+
+    const pick=document.createElement('input');
+    pick.type='checkbox'; pick.className='importPick';
+    pick.checked=!already; pick.disabled=already;
+    pick.setAttribute('aria-label',`Добавить ${tag}`);
+
+    const inp=document.createElement('input');
+    inp.type='text'; inp.value=tag; inp.className='importTag';
+    inp.setAttribute('aria-label',`Тег ${tag}`);
+
+    const doneWrap=document.createElement('label');
+    doneWrap.className='importDoneWrap';
+    doneWrap.title='Отметить как выполненный';
+    const done=document.createElement('input');
+    done.type='checkbox'; done.className='importDone';
+    done.setAttribute('aria-label',`Отметить ${tag} как выполненный`);
+    doneWrap.append(done);
+
+    line.append(pick,inp,doneWrap);
+    const note=document.createElement('div');
+    note.className='mini';
+    note.style.marginLeft='34px';
+    note.textContent=`${already?'Уже есть в списке':''}${unit?' • установка '+unit:''}${localStorage.getItem('kipGeminiApiKey')?' • кандидат Gemini':''}`;
+    row.append(line,note);
     box.appendChild(row);
   });
   actions.style.display='flex';
 }
+
 function importCandidates(){
   const rows=[...$("importList").querySelectorAll(".importItem")];
-  const toAdd=[];
-  rows.forEach(row=>{
-    const cb=row.querySelector('input[type="checkbox"]');
-    if(!cb.checked)return;
-    const inp=row.querySelector('input[type="text"]');
-    const sel=row.querySelector("select");
-    const tag=inp.value.trim().toUpperCase();
-    const m=tag.match(/^(\d{4})-/);
-    if(!m)return;
-    if(!/^\d{4}-[A-Z]{2,6}-\d{3}[A-Z]?$/.test(tag))return;
-    toAdd.push({unit:m[1],tag,done:sel.value==="done",task:""});
+  const selected=[];const invalid=[];
+  rows.forEach((row,index)=>{
+    const cb=row.querySelector('.importPick');if(!cb?.checked)return;
+    const inp=row.querySelector('.importTag');const done=row.querySelector('.importDone');
+    const tag=inp.value.trim().toUpperCase();const m=tag.match(/^(\d{4})-/);
+    if(!m||!/^[0-9]{4}-[A-Z]{2,8}-[0-9]{3}[A-Z]?$/.test(tag)){invalid.push(index+1);return;}
+    selected.push({unit:m[1],tag,done:!!done?.checked,task:""});
   });
-  const existing=new Set(data.map(x=>x.tag.toUpperCase()));
-  let nextId=data.reduce((m,x)=>Math.max(m,Number(x.id)||0),0)+1;
-  let added=0;
-  for(const x of toAdd){
-    if(existing.has(x.tag))continue;
-    data.push({id:nextId++,unit:x.unit,tag:x.tag,done:x.done,task:x.task||""});
-    existing.add(x.tag);added++;
+  if(invalid.length){showToast(`Исправь тег(и) №${invalid.join(", ")} перед добавлением`);return;}
+  if(!selected.length){showToast("Ничего не выбрано для добавления");return;}
+  const existing=new Set(data.map(x=>tagKey(x.tag)));const batch=new Set();const duplicates=[];
+  for(const item of selected){const key=tagKey(item.tag);if(existing.has(key)||batch.has(key))duplicates.push(item.tag);else batch.add(key);}
+  if(duplicates.length){
+    const unique=[...new Set(duplicates)];
+    showToast(`Дубликаты не добавлены: ${unique.join(", ")}. Измени тег или сними отметку.`);
+    rows.forEach(row=>{const inp=row.querySelector('.importTag');if(inp&&unique.includes(inp.value.trim().toUpperCase()))inp.style.borderColor="#d9534f";});
+    return;
   }
-  save();closeModal();render();showToast(`Добавлено: ${added}`);
+  const max=data.reduce((m,x)=>Math.max(m,Number(x.id)||0),0);
+  const additions=selected.map((x,i)=>({id:max+i+1,unit:x.unit,tag:x.tag,done:x.done,task:x.task||""}));
+  const before=data.length;
+  data=data.concat(additions);
+  try{save();if(data.length!==before+additions.length)throw new Error("Проверка количества после сохранения не прошла");}
+  catch(error){console.error(error);data=data.slice(0,before);save();showToast("Не удалось сохранить добавленные теги. Повтори ещё раз.");return;}
+  closeModal();render();showToast(`Добавлено распознанных: ${additions.length}`);
 }
 
 let fileCandidates=[];
@@ -1136,17 +1626,36 @@ function renderFileCandidates(){
     actions.style.display="none";
     return;
   }
-  const existing=new Set(data.map(item=>String(item.tag||"").toUpperCase()));
+  const existing=new Set(data.map(item=>tagKey(item.tag)));
   fileCandidates.forEach(candidate=>{
     const tag=String(candidate||"").toUpperCase();
     const unit=(tag.match(/^(\d{4})-/)||[])[1]||"";
-    const already=existing.has(tag);
-    const row=document.createElement("div");row.className="importItem";
-    row.innerHTML=`<label style="display:flex;align-items:center;gap:10px;width:100%;"><input type="checkbox" ${already?"":"checked"} ${already?"disabled":""}><input type="text" value="${escapeHtml(tag)}" style="flex:1;min-width:0;"><select><option value="todo">Не выполнен</option><option value="done">Выполнен</option></select></label><div class="mini" style="margin-left:34px;">${already?"Уже есть в списке":""}${unit?" • установка "+unit:""}</div>`;
-    box.appendChild(row);
+    const already=existing.has(tagKey(tag));
+    const row=document.createElement("div"); row.className="importItem";
+    const line=document.createElement("div"); line.className="importRow";
+
+    const pick=document.createElement("input");
+    pick.type="checkbox"; pick.className="importPick"; pick.checked=!already; pick.disabled=already;
+    pick.setAttribute("aria-label",`Добавить ${tag}`);
+
+    const inp=document.createElement("input");
+    inp.type="text"; inp.value=tag; inp.className="importTag";
+    inp.setAttribute("aria-label",`Тег ${tag}`);
+
+    const doneWrap=document.createElement("label"); doneWrap.className="importDoneWrap";
+    const done=document.createElement("input"); done.type="checkbox"; done.className="importDone";
+    done.setAttribute("aria-label",`Отметить ${tag} как выполненный`);
+    const doneText=document.createElement("span"); doneText.textContent="Выполнен";
+    doneWrap.append(done,doneText);
+
+    line.append(pick,inp,doneWrap);
+    const note=document.createElement("div"); note.className="mini"; note.style.marginLeft="34px";
+    note.textContent=`${already?"Уже есть в списке":""}${unit?" • установка "+unit:""}`;
+    row.append(line,note); box.appendChild(row);
   });
   actions.style.display="flex";
 }
+
 async function runFileImport(file){
   const status=$("fileImportStatus");
   $("fileImportList").innerHTML="";$("fileImportActions").style.display="none";fileCandidates=[];
@@ -1174,32 +1683,89 @@ async function runFileImport(file){
 }
 function importFileCandidates(){
   const rows=[...$("fileImportList").querySelectorAll(".importItem")];
-  const existing=new Set(data.map(item=>String(item.tag||"").toUpperCase()));
-  let nextId=data.reduce((max,item)=>Math.max(max,Number(item.id)||0),0)+1;
-  let added=0;
-  rows.forEach(row=>{
-    const checked=row.querySelector('input[type="checkbox"]');
-    const tagInput=row.querySelector('input[type="text"]');
-    const statusInput=row.querySelector("select");
+  const existing=new Set(data.map(item=>tagKey(item.tag)));
+  const additions=[]; const duplicates=[]; const invalid=[];
+  rows.forEach((row,index)=>{
+    const checked=row.querySelector('.importPick');
+    if(!checked?.checked)return;
+    const tagInput=row.querySelector('.importTag');
+    const doneInput=row.querySelector('.importDone');
     const tag=tagInput.value.trim().toUpperCase();
     const unit=(tag.match(/^(\d{4})-/)||[])[1];
-    if(!checked.checked || !unit || !/^\d{4}-[A-Z]{2,6}-\d{3}[A-Z]?$/.test(tag) || existing.has(tag))return;
-    data.push({id:nextId++,unit,tag,done:statusInput.value==="done",task:""});
-    existing.add(tag);added++;
+    const key=tagKey(tag);
+    if(!unit||!/^[0-9]{4}-[A-Z]{2,8}-[0-9]{3}[A-Z]?$/.test(tag)){invalid.push(index+1);return;}
+    if(existing.has(key)){duplicates.push(tag);return;}
+    existing.add(key);
+    additions.push({unit,tag,done:!!doneInput?.checked,task:""});
   });
-  save();closeModal();render();showToast(`Добавлено из файла: ${added}`);
+  if(invalid.length){showToast(`Исправь тег(и) №${invalid.join(", ")} перед добавлением`);return;}
+  if(duplicates.length){
+    const unique=[...new Set(duplicates)];
+    showToast(`Дубликаты не добавлены: ${unique.join(", ")}. Измени тег или сними отметку.`);
+    rows.forEach(row=>{const inp=row.querySelector('.importTag');if(inp&&unique.includes(inp.value.trim().toUpperCase()))inp.style.borderColor="#d9534f";});
+    return;
+  }
+  if(!additions.length){showToast("Новых тегов для добавления нет");return;}
+  const max=data.reduce((m,x)=>Math.max(m,Number(x.id)||0),0);
+  const before=data.length;
+  data=data.concat(additions.map((x,i)=>({id:max+i+1,...x})));
+  try{save();if(data.length!==before+additions.length)throw new Error("Проверка количества после сохранения не прошла");}
+  catch(error){console.error(error);data=data.slice(0,before);save();showToast("Не удалось сохранить добавленные теги. Повтори ещё раз.");return;}
+  closeModal();render();showToast(`Добавлено из файла: ${additions.length}`);
 }
+
+const FONT_OPTIONS=[
+  {id:"system",name:"Системный",family:'-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif',sample:"Aa КИП 123"},
+  {id:"arial",name:"Arial",family:'Arial,"Helvetica Neue",sans-serif',sample:"Aa КИП 123"},
+  {id:"verdana",name:"Verdana",family:'Verdana,sans-serif',sample:"Aa КИП 123"},
+  {id:"georgia",name:"Georgia",family:'Georgia,"Times New Roman",serif',sample:"Aa КИП 123"},
+  {id:"trebuchet",name:"Trebuchet MS",family:'"Trebuchet MS",Arial,sans-serif',sample:"Aa КИП 123"},
+  {id:"courier",name:"Courier New",family:'"Courier New",monospace',sample:"Aa КИП 123"}
+];
+function getFontOption(id){return FONT_OPTIONS.find(x=>x.id===id)||FONT_OPTIONS[0];}
+function applyFontFamily(id){
+  const option=getFontOption(id);
+  document.documentElement.style.setProperty("--appFont",option.family);
+  localStorage.setItem(FONT_FAMILY_KEY,option.id);
+  const grid=$("fontChoiceGrid");
+  if(grid)grid.querySelectorAll(".fontChoice").forEach(btn=>btn.classList.toggle("active",btn.dataset.font===option.id));
+  const btn=$("fontBtn");
+  if(btn){btn.title=`Шрифт: ${option.name}`;btn.setAttribute("aria-label",`Выбрать шрифт. Сейчас: ${option.name}`);}
+}
+function renderFontChoices(){
+  const grid=$("fontChoiceGrid"); if(!grid)return;
+  grid.innerHTML="";
+  const current=localStorage.getItem(FONT_FAMILY_KEY)||"system";
+  FONT_OPTIONS.forEach(option=>{
+    const btn=document.createElement("button");
+    btn.type="button";btn.className="fontChoice";btn.dataset.font=option.id;
+    btn.style.fontFamily=option.family;
+    btn.innerHTML=`<span class="fontChoiceName">${option.name}</span><span class="fontChoiceSample">${option.sample}</span>`;
+    btn.onclick=()=>{applyFontFamily(option.id);closeFontMenu();showToast(`Шрифт: ${option.name}`);};
+    grid.appendChild(btn);
+  });
+  applyFontFamily(current);
+}
+function openFontMenu(){renderFontChoices();$("fontOverlay").classList.add("show");}
+function closeFontMenu(){$("fontOverlay").classList.remove("show");}
+
+const THEME_ORDER=["light","navy","violet","green"];
+const THEME_ICON={light:"☼",navy:"☾",violet:"◈",green:"◒"};
 function applyTheme(theme){
-  const selected=["light","navy","violet","green"].includes(theme)?theme:"light";
+  const selected=THEME_ORDER.includes(theme)?theme:"light";
   document.documentElement.dataset.theme=selected;
   localStorage.setItem(THEME_KEY,selected);
   const meta=document.querySelector('meta[name="theme-color"]');
   if(meta)meta.content={light:"#f5f7fa",navy:"#0d1726",violet:"#171124",green:"#0d211e"}[selected];
-  document.querySelectorAll("[data-theme-choice]").forEach(button=>button.classList.toggle("active",button.dataset.themeChoice===selected));
+  const icon=$("themeIcon");
+  if(icon)icon.textContent=THEME_ICON[selected];
+  const btn=$("themeBtn");
+  if(btn){btn.title=`Тема: ${selected}. Нажми для смены`;btn.setAttribute("aria-label",`Сменить тему. Сейчас: ${selected}`);}
 }
-function openTheme(){
-  applyTheme(localStorage.getItem(THEME_KEY)||"light");
-  $("themeOverlay").classList.add("show");
+function cycleTheme(){
+  const current=localStorage.getItem(THEME_KEY)||"light";
+  const next=THEME_ORDER[(THEME_ORDER.indexOf(current)+1)%THEME_ORDER.length];
+  applyTheme(next);
 }
 
 
@@ -1228,6 +1794,13 @@ $("docTitle").addEventListener("keydown",e=>{
   if(e.key==="Enter"){e.preventDefault();e.currentTarget.blur();}
 });
 
+document.addEventListener("input",event=>{
+  if(event.target.matches(".taskBox textarea")){
+    const row=event.target.closest(".row"),id=Number(row?.dataset.id),item=data.find(x=>x.id===id);
+    if(item){item.task=event.target.value;scheduleSave();}
+  }
+});
+
 $("search").addEventListener("input",e=>{query=e.target.value;renderSummary();renderList();});
 $("fontMinus").onclick=()=>{
   let s=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--fontScale"))||1;
@@ -1238,18 +1811,33 @@ $("fontPlus").onclick=()=>{
   s=Math.min(1.35,Math.round((s+.1)*10)/10);document.documentElement.style.setProperty("--fontScale",s);localStorage.setItem(FONT_KEY,s);
 };
 $("addBtn").onclick=openAdd;
-$("newDoc").onclick=()=>openSaveDialog(true);
-$("saveHtml").onclick=()=>openSaveDialog(false);
+$("newDoc").onclick=openBlankNewDocument;
+$("saveHtml").onclick=()=>openExportMenu("save");
 $("chooseFolderBtn").onclick=chooseSaveFolder;
 $("saveNowBtn").onclick=saveNow;
 $("saveCloseBtn").onclick=closeSaveDialog;
-$("shareHtml").onclick=shareCurrentDocument;
-$("themeBtn").onclick=openTheme;
-$("themeCloseBtn").onclick=()=>$("themeOverlay").classList.remove("show");
-$("themeOverlay").addEventListener("click",event=>{if(event.target===$("themeOverlay"))$("themeOverlay").classList.remove("show");});
-document.querySelectorAll("[data-theme-choice]").forEach(button=>button.onclick=()=>{applyTheme(button.dataset.themeChoice);$("themeOverlay").classList.remove("show");});
+$("shareHtml").onclick=()=>openExportMenu("share");
+$("exportCloseBtn").onclick=closeExportMenu;
+$("exportFileBtn").onclick=handleExportFile;
+$("exportAllBtn").onclick=()=>shareTextReport("all");
+$("exportDoneBtn").onclick=()=>shareTextReport("done");
+$("exportTodoBtn").onclick=()=>shareTextReport("todo");
+$("exportPagesBtn").onclick=()=>shareTextReport("pages");
+$("exportOverlay").addEventListener("click",e=>{if(e.target===$("exportOverlay"))closeExportMenu();});
+$("themeBtn").onclick=cycleTheme;
+$("fontBtn").onclick=openFontMenu;
+$("fontCloseBtn").onclick=closeFontMenu;
+$("fontOverlay").addEventListener("click",e=>{if(e.target===$("fontOverlay"))closeFontMenu();});
 $("addPageBtn").onclick=createPage;
-$("renamePageBtn").onclick=renameActivePage;
+$("ctxEditPage").onclick=()=>{const id=contextPageId||[...selectedPageIds][0];if(id){closePageContextMenu();editPageById(id);}};
+$("ctxSelectAllPages").onclick=()=>{closePageContextMenu();enterPageManage(contextPageId||activePageId,true);};
+$("ctxDeleteSelected").onclick=()=>{if(selectedPageIds.size){closePageContextMenu();deleteSelectedPages();}};
+$("ctxDoneManage").onclick=exitPageManage;
+document.addEventListener("pointerdown",e=>{
+  const menu=$("pageContextMenu");
+  if(menu?.classList.contains("show")&&!menu.contains(e.target)&&!e.target.closest(".pageChip"))closePageContextMenu();
+});
+document.addEventListener("scroll",closePageContextMenu,{passive:true});
 $("closeBtn").onclick=closeModal;
 
 $("manualChoice").onclick=()=>setAddMode("manual");
@@ -1281,6 +1869,24 @@ $("importBtn").onclick=importCandidates;
 $("cancelImportBtn").onclick=()=>setAddMode("manual");
 $("fileImportBtn").onclick=importFileCandidates;
 $("cancelFileImportBtn").onclick=()=>setAddMode("manual");
+$("duplicateEditBtn").onclick=()=>{
+  const pending=pendingDuplicate?.pending;closeDuplicateDialog();
+  if(pending){unitInput.value=pending.unit;tagInput.value=pending.tag;statusInput.value=pending.done?"done":"todo";setAddMode("manual");setTimeout(()=>tagInput.focus(),50);}
+};
+$("duplicateDeleteBtn").onclick=()=>{
+  if(!pendingDuplicate)return;
+  const pending=pendingDuplicate.pending,duplicateId=pendingDuplicate.duplicateId;
+  data=data.filter(item=>item.id!==duplicateId);save();closeDuplicateDialog();
+  editId=pending.editId;unitInput.value=pending.unit;tagInput.value=pending.tag;statusInput.value=pending.done?"done":"todo";
+  if(editId!==null){
+    const item=data.find(x=>x.id===editId);
+    if(item){item.unit=pending.unit;item.tag=pending.tag;item.done=pending.done;save();closeModal();render();showToast("Дубликат удалён, запись обновлена");return;}
+  }
+  const max=data.reduce((m,x)=>Math.max(m,Number(x.id)||0),0);data.push({id:max+1,unit:pending.unit,tag:pending.tag,done:pending.done,task:""});save();closeModal();render();showToast("Дубликат удалён, новый прибор добавлен");
+};
+$("duplicateCloseBtn").onclick=closeDuplicateDialog;
+$("duplicateOverlay").addEventListener("click",e=>{if(e.target===$("duplicateOverlay"))closeDuplicateDialog();});
+
 $("saveOverlay").addEventListener("click",e=>{if(e.target===$("saveOverlay"))closeSaveDialog();});
 $("cancelBtn").onclick=closeModal;
 $("saveBtn").onclick=saveModal;
@@ -1298,11 +1904,14 @@ $("clearChecks").onclick=()=>{
     data.forEach(item=>item.done=false);save();filter="all";render();showToast("Все отметки сняты");
   }
 };
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeSaveDialog();$("themeOverlay").classList.remove("show");}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeDuplicateDialog();closeSaveDialog();}});
 
 const savedFont=parseFloat(localStorage.getItem(FONT_KEY));
 if(savedFont) document.documentElement.style.setProperty("--fontScale",savedFont);
+const savedFontFamily=localStorage.getItem(FONT_FAMILY_KEY)||"system";
+applyFontFamily(savedFontFamily);
 applyTheme(localStorage.getItem(THEME_KEY)||"light");
+applyFontFamily(localStorage.getItem(FONT_FAMILY_KEY)||"system");
 applyDocumentTitle();
 render();
 </script>
