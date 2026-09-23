@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1769e0" id="themeColorMeta">
 <meta name="apple-mobile-web-app-title" content="КИП-чек">
@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-<title>КИП — чек-лист • v56</title>
+<title>КИП — чек-лист • v66</title>
 <style>
 :root{
   --fontScale:1;
@@ -23,12 +23,13 @@
   --top-divider:rgba(31,49,76,.08); --input-bg:#f8fafc; --input-border:#cfd7e3; --field-label:#334155; --legend-label:#334155;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{background:var(--bg);overscroll-behavior-y:none;}
+html{background:var(--bg);overscroll-behavior-y:none;-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation;}
 body{
   margin:0;
   background:var(--bg);
   color:var(--text);
   overscroll-behavior-y:none;
+  touch-action:manipulation;
   font-family:var(--appFont);
   font-size:calc(16px * var(--fontScale));
 }
@@ -39,7 +40,7 @@ button,input,select,textarea{
 button, input, select, textarea, option, label, summary {
   font-family:inherit;
 }
-button{border:0}
+button{border:0;touch-action:manipulation}
 .app{max-width:760px;margin:0 auto;padding:calc(8px + env(safe-area-inset-top)) 12px 108px}
 .top{
   position:sticky;top:0;z-index:10;background:var(--bg);padding:4px 0 7px;
@@ -88,8 +89,9 @@ h1.editing{background:#fff;border:1px dashed var(--accent);border-radius:10px;pa
 }
 .ocrBar{height:100%;width:0;background:var(--accent);transition:width .18s ease}
 .ocrTools{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ocrModeRow{display:flex;align-items:center;gap:8px;margin-bottom:7px;min-width:0}.ocrModeRow .mini{flex:1;min-width:0;line-height:1.25}.ocrModeRow .secondary{flex:0 0 auto;padding:7px 9px;font-size:12px}
+
 .ocrWarn{padding:9px 10px;border-radius:10px;background:#fff8e1;border:1px solid #f2d48a;color:#6b4f00;margin-top:8px}
-.ocrVisionOnlyWarn{padding:7px 9px;border-radius:9px;background:#fff8e1;border:1px solid #f2d48a;color:#6b4f00;margin:5px 0;font-size:11px;line-height:1.25}
 .importLegend{
   display:none;justify-content:space-between;align-items:center;gap:12px;
   padding:8px 3px 7px;color:var(--legend-label);font-size:14px;line-height:1.2;
@@ -138,15 +140,21 @@ h1.editing{background:#fff;border:1px dashed var(--accent);border-radius:10px;pa
 .dangerText{color:var(--danger)}
 
 .tabs{
-  display:flex;gap:7px;overflow-x:auto;padding:10px 0 5px;
+  display:flex;gap:7px;overflow-x:auto;touch-action:pan-x;padding:10px 0 5px;
   scrollbar-width:none;
 }
 .tabs::-webkit-scrollbar{display:none}
 .tab{
-  flex:0 0 auto;background:#fff;border:1px solid var(--line);border-radius:999px;
-  padding:8px 12px;cursor:pointer;color:#4b5563;white-space:nowrap;font-weight:600;font-size:calc(13px * var(--fontScale));
+  flex:0 0 auto;background:var(--card);border:1px solid var(--line);border-radius:999px;
+  padding:8px 12px;cursor:pointer;color:var(--muted);white-space:nowrap;font-weight:700;font-size:calc(13px * var(--fontScale));
 }
-.tab.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 7px rgba(23,105,224,.22)}
+/* Фильтры визуально переходят между состояниями так же, как вкладки страниц. */
+.tab.active{
+  background:var(--soft);
+  color:var(--accent-strong);
+  border-color:var(--accent);
+  box-shadow:0 2px 7px rgba(23,105,224,.18);
+}
 .stats{
   display:flex;gap:8px;margin:6px 0 10px;flex-wrap:wrap;
 }
@@ -164,13 +172,57 @@ h1.editing{background:#fff;border:1px dashed var(--accent);border-radius:10px;pa
 .summaryFoot{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:calc(12px * var(--fontScale))}
 .list{display:grid;gap:6px;align-content:start;padding-bottom:88px;contain:layout style}.list:empty{padding-bottom:0}
 .row{
+  content-visibility:auto;contain-intrinsic-size:52px;
   display:flex;align-items:center;gap:10px;background:var(--card);
   border:1px solid var(--line);border-radius:12px;padding:5px 9px;
   min-height:42px;contain:layout paint;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:pan-y;box-shadow:0 2px 7px rgba(31,49,76,.055);
 }
 .row.done{background:var(--soft-success);border-color:#d8eadf}
-.row *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.row{overflow:visible}.row *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .row input,.row textarea,.row select,.row [contenteditable=true]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+.row{touch-action:pan-y;}
+/* v62 — действия тега: компактные, не меняют высоту карточки. */
+.row{position:relative;padding-right:138px;}
+.rowActions{position:absolute;right:7px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:3px;z-index:2;}
+.rowAction{
+  width:30px;height:30px;flex:0 0 30px;border:1px solid var(--line);border-radius:9px;
+  background:var(--control);color:var(--text);display:grid;place-items:center;padding:0;
+  cursor:pointer;font-size:16px;font-weight:800;line-height:1;
+  box-shadow:0 1px 3px rgba(31,49,76,.05);
+  opacity:1;transform:translateX(0) scale(1);
+  transition:opacity var(--ui-motion) var(--ui-ease),transform var(--ui-motion) var(--ui-ease),
+             background-color var(--ui-motion) var(--ui-ease),border-color var(--ui-motion) var(--ui-ease);
+}
+.rowAction:active{transform:translateX(0) scale(.92);}
+
+/* Карандаш всегда закреплён у правого края. Остальные действия выпадают слева от него. */
+.rowEdit{order:4;position:relative;z-index:4;}
+.rowCancel{order:1;opacity:0;pointer-events:none;transform:translateX(12px) scale(.72);}
+.rowSelect{order:2;opacity:0;pointer-events:none;transform:translateX(12px) scale(.72);}
+.rowCopy{order:3;opacity:0;pointer-events:none;transform:translateX(12px) scale(.72);}
+
+.row.selection-mode .rowCancel,
+.row.selection-mode .rowSelect,
+.row.selection-mode .rowCopy{
+  opacity:1;pointer-events:auto;transform:translateX(0) scale(1);
+}
+.row.selection-mode .rowCancel{transition-delay:.00s;}
+.row.selection-mode .rowSelect{transition-delay:.035s;}
+.row.selection-mode .rowCopy{transition-delay:.07s;}
+
+.rowCancel{color:var(--muted);}
+.rowSelect.selected{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 0 2px rgba(23,105,224,.12);}
+.rowSelect.selected::after{content:"✓";font-size:17px;}
+.rowSelect:not(.selected)::after{content:"";}
+.rowCopy{color:var(--accent-strong);}
+.selection-mode .rowAction{box-shadow:0 2px 7px rgba(31,49,76,.09);}
+
+@media (max-width:380px){
+  .row{padding-right:132px}
+  .rowActions{right:5px;gap:3px}
+  .rowAction{width:28px;height:28px;flex-basis:28px;font-size:14px}
+}
+
 .check{
   width:25px;height:25px;flex:0 0 25px;border-radius:9px;
   border:2px solid #98a3b4;background:#fff;display:grid;place-items:center;
@@ -182,7 +234,7 @@ h1.editing{background:#fff;border:1px dashed var(--accent);border-radius:10px;pa
   transform:rotate(-45deg) translate(1px,-1px);
 }
 .num{width:26px;flex:0 0 26px;color:#9ca3af;font-size:calc(12px * var(--fontScale));text-align:right}
-.info{min-width:0;flex:1}
+.info{min-width:0;flex:1;width:0}
 .tag{font-weight:700;letter-spacing:.1px;overflow-wrap:anywhere}
 .unit{display:none}
 .row.done .tag{color:#6b7280;text-decoration:line-through}
@@ -195,10 +247,25 @@ h1.editing{background:#fff;border:1px dashed var(--accent);border-radius:10px;pa
 .row.done .taskToggle.hasTask::after{display:none}
 .taskSave{display:none;border:0;border-radius:8px;background:#1f2937;color:#fff;padding:5px 9px;cursor:pointer;font-size:calc(11px * var(--fontScale));font-weight:800;line-height:1.2;white-space:nowrap}
 .taskSave.show{display:inline-flex;align-items:center}
-.taskEditorWrap{display:block;max-height:0;overflow:hidden;opacity:0;transform:translateY(-7px);margin-top:0;pointer-events:none;transition:max-height var(--ui-motion) var(--ui-ease),opacity var(--ui-motion) var(--ui-ease),transform var(--ui-motion) var(--ui-ease),margin-top var(--ui-motion) var(--ui-ease)}
-.taskEditorWrap.open{max-height:220px;opacity:1;transform:translateY(0);margin-top:6px;pointer-events:auto}
-.taskBox{padding:0;background:transparent;border:0;border-radius:0}
-.taskBox textarea{display:block;width:100%;min-height:58px;max-height:130px;resize:vertical;border:1px solid #cfd7e3;border-radius:10px;padding:9px 10px;background:#fff;outline:none;box-shadow:none;font:inherit;font-size:calc(13px * var(--fontScale));line-height:1.3;-webkit-appearance:none;appearance:none}
+.taskEditorWrap{
+  display:block;max-height:0;overflow:hidden;opacity:0;transform:translateY(-7px);
+  margin-top:0;pointer-events:none;
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  transition:max-height var(--ui-motion) var(--ui-ease),opacity var(--ui-motion) var(--ui-ease),
+             transform var(--ui-motion) var(--ui-ease),margin-top var(--ui-motion) var(--ui-ease);
+}
+.taskEditorWrap.open{
+  max-height:116px;opacity:1;transform:translateY(0);margin-top:5px;pointer-events:auto;
+}
+.taskBox{padding:0;background:transparent;border:0;border-radius:0;width:100%;max-width:100%;box-sizing:border-box}
+.taskBox textarea{
+  display:block;width:100%;min-width:0;box-sizing:border-box;min-height:86px;max-height:104px;resize:vertical;
+  border:1px solid #cfd7e3;border-radius:10px;padding:9px 10px;background:#fff;
+  outline:none;box-shadow:none;font:inherit;font-size:calc(15px * var(--fontScale));
+  line-height:1.35;-webkit-appearance:none;appearance:none;
+}
 .longhint{font-size:calc(11px * var(--fontScale));color:#9ca3af}
 .empty{text-align:center;color:var(--muted);background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:22px 12px;min-height:84px;max-height:96px;display:grid;place-items:center;align-content:center}
 
@@ -209,6 +276,9 @@ h1.editing{background:#fff;border:1px dashed var(--accent);border-radius:10px;pa
 }
 .footer{position:fixed;z-index:19;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:7px;padding:7px 88px calc(7px + env(safe-area-inset-bottom)) 12px;background:var(--bg);border-top:1px solid var(--line)}
 .reset{flex:1;min-width:0;color:#8b3b37;background:#fff;border:1px solid #f0cfcc;border-radius:12px;padding:10px 6px;cursor:pointer;font-size:calc(11px * var(--fontScale));font-weight:750;box-shadow:0 2px 8px rgba(76,31,31,.05)}
+.selection-mode-active .footer .reset{transition:transform var(--ui-motion) var(--ui-ease),background-color var(--ui-motion) var(--ui-ease),border-color var(--ui-motion) var(--ui-ease);}
+.selection-mode-active #deleteAll{color:var(--danger);}
+.selection-mode-active #deleteAll:disabled{opacity:.45;cursor:default;}
 .overlay{
   display:flex;visibility:hidden;opacity:0;pointer-events:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.42);
   align-items:flex-end;justify-content:center;transition:opacity .16s ease,visibility 0s linear .16s;
@@ -267,9 +337,24 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
 @media (hover:hover){.row:hover{border-color:#cfd9e8;box-shadow:0 4px 12px rgba(31,49,76,.09)}.smallbtn:hover,.iconBtn:hover{border-color:#c8d5e7}.tab:not(.active):hover,.choice:hover{background:#f3f7fc}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+/* v58 — мобильная устойчивость: после поворота не сохраняем промежуточный масштаб/ширину. */
+@media (orientation:landscape) and (max-height:560px){
+  .app{padding-bottom:82px}
+  .top{position:relative}
+  .summaryCard{margin-top:5px}
+  .overlay .sheet{max-height:92dvh;overflow:auto}
+  .exportSheet{max-height:90dvh}
+}
+@media (max-width:420px){
+  .utilityRow{gap:5px}
+  .utilityBtn{height:38px;font-size:20px}
+  #installApp{flex:0 0 54px;font-size:0;padding:0}
+  #installApp::before{content:'⇩';font-size:21px;line-height:1}
+}
+
 #installApp[hidden]{display:none}
-#installApp{border-color:var(--accent);color:var(--accent);background:var(--soft);font-weight:800}
-.utilityRow{display:flex;align-items:center;gap:7px;margin-top:7px;flex-wrap:nowrap;width:100%}
+#installApp{border-color:var(--accent);color:var(--accent);background:var(--soft);font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 7px}
+.utilityRow{display:flex;align-items:center;gap:7px;margin-top:7px;flex-wrap:nowrap;width:100%;min-width:0}.utilityRow>*{min-width:0}
 .utilityBtn{width:auto;height:40px;min-width:0;flex:1 1 0;padding:0;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--text);font-size:21px;font-weight:750;cursor:pointer;box-shadow:0 1px 3px rgba(30,41,59,.03);display:grid;place-items:center;line-height:1}
 .utilityBtn.primaryAction{color:var(--accent);border-color:#bfd3f5;background:var(--soft)}
 .utilityBtn[hidden]{display:none}
@@ -280,7 +365,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .pageBar{display:flex;align-items:center;gap:7px;margin-top:9px}
 .pageViewport{position:relative;flex:1;min-width:0;overflow:hidden}
 .pageViewport::after{content:"";position:absolute;z-index:2;top:0;right:0;bottom:0;width:30px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--bg) 88%)}
-.pageStrip{display:flex;gap:7px;overflow-x:auto;flex:1;padding:1px 20px 3px 0;scrollbar-width:none;overscroll-behavior-x:contain}
+.pageStrip{display:flex;gap:7px;touch-action:pan-x;overflow-x:auto;flex:1;padding:1px 20px 3px 0;scrollbar-width:none;overscroll-behavior-x:contain}
 .pageStrip::-webkit-scrollbar{display:none}
 .pageChip{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none;position:relative;display:flex;align-items:center;gap:6px;flex:0 0 auto;max-width:180px;min-height:36px;padding:7px 10px;background:var(--card);color:var(--muted);border:1px solid var(--line);border-radius:11px;cursor:pointer;font-size:calc(12px * var(--fontScale));font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;touch-action:pan-x;transition:transform .14s ease,opacity .14s ease}
 .pageChip.active{background:var(--soft);color:var(--accent-strong);border-color:#9bbcff}
@@ -404,7 +489,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 :root[data-theme]:not([data-theme="light"]) .check{background:var(--control);border-color:var(--muted)}
 :root[data-theme]:not([data-theme="light"]) .row.done .tag{color:var(--muted)}
 :root[data-theme]:not([data-theme="light"]) .empty{background:var(--card);border-color:var(--line)}
-:root[data-theme]:not([data-theme="light"]) .tab.active,:root[data-theme]:not([data-theme="light"]) .choice.active,:root[data-theme]:not([data-theme="light"]) .pageChip.active{background:var(--soft);color:var(--accent-strong);border-color:var(--accent)}
+:root[data-theme]:not([data-theme="light"]) .choice.active,:root[data-theme]:not([data-theme="light"]) .pageChip.active,:root[data-theme]:not([data-theme="light"]) .tab.active{background:var(--soft);color:var(--accent-strong);border-color:var(--accent);box-shadow:0 2px 7px rgba(23,105,224,.18)}
 :root[data-theme]:not([data-theme="light"]) .reset{color:#ffb1aa;border-color:#6e4144}
 :root[data-theme]:not([data-theme="light"]) ::placeholder{color:var(--muted);opacity:.85}
 @media (min-width:700px){
@@ -546,6 +631,7 @@ html,body{min-height:100%;background:var(--bg)}
 
 /* Кнопки тоже не должны реагировать резким рывком */
 button,.choice,.tab,.pageChip,.pageAction,.fontChoice{
+  touch-action:manipulation;
   transition:transform .20s var(--ui-ease),
              box-shadow .20s var(--ui-ease),
              border-color .20s var(--ui-ease),
@@ -749,7 +835,7 @@ button,.choice,.tab,.pageChip,.pageAction,.fontChoice{
     </div>
 
     <div id="photoForm" style="display:none">
-      <div class="mini" id="ocrConfigStatus" style="margin-bottom:7px">Распознавание фото: Gemini Vision + резервный OCR. Отметки и задания нужно проверить перед добавлением.</div>
+      <div class="ocrModeRow"><div class="mini" id="ocrConfigStatus">Распознавание: Gemini Vision → резервный OCR</div><button class="secondary" id="configureGeminiBtn" type="button">Gemini</button></div>
       <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none">
       <input id="photoInput" type="file" accept="image/*" style="display:none">
       <button class="action" id="ocrBackBtn" type="button" style="width:100%;margin-top:10px">← Другой способ</button>
@@ -816,6 +902,7 @@ button,.choice,.tab,.pageChip,.pageAction,.fontChoice{
       <button class="choice" id="exportAllBtn" type="button"><span class="ico">☷</span>Весь список</button>
       <button class="choice" id="exportDoneBtn" type="button"><span class="ico">✓</span>Выполненные</button>
       <button class="choice" id="exportTodoBtn" type="button"><span class="ico">○</span>Невыполненные</button>
+      <button class="choice" id="exportTaskBtn" type="button"><span class="ico">✎</span>Задания</button>
     </div>
   </div>
 </div>
@@ -830,6 +917,7 @@ button,.choice,.tab,.pageChip,.pageAction,.fontChoice{
       <button class="choice" data-dry-kind="all"><span class="ico">☷</span>Весь список</button>
       <button class="choice" data-dry-kind="done"><span class="ico">✓</span>Выполненные</button>
       <button class="choice" data-dry-kind="todo"><span class="ico">○</span>Невыполненные</button>
+      <button class="choice" data-dry-kind="task"><span class="ico">✎</span>Задания</button>
     </div>
   </div>
 </div>
@@ -885,6 +973,8 @@ let selectedPageIds = new Set();
 let pageLongPressTimer = null;
 let pageLongPressTriggered = false;
 let editId = null;
+let selectionMode = false;
+let selectedTagIds = new Set();
 let longPressTimer = null;
 let longPressTriggered = false;
 let pendingDuplicate = null;
@@ -1083,6 +1173,7 @@ function editPageById(id){
 }
 async function deleteSelectedPages(){
   const ids=[...selectedPageIds];
+  resetTagSelection();
   if(!ids.length)return;
   const names=pages.filter(p=>ids.includes(p.id)).map(p=>p.name);
   if(!await askConfirm(`Удалить ${ids.length} ${ids.length===1?"страницу":"страницы"}?\n\n${names.slice(0,5).join("\n")}${names.length>5?"\n…":""}`))return;
@@ -1113,9 +1204,15 @@ function closePageContextMenu(){
   contextPageId=null;
 }
 
+function resetTagSelection(){
+  selectionMode=false;
+  selectedTagIds.clear();
+  document.body.classList.remove("selection-mode-active");
+}
 function selectPage(id){
   const page=pages.find(item=>item.id===id);
   if(!page)return;
+  resetTagSelection();
   activePageId=page.id;
   data=page.data;
   filter="all";query="";
@@ -1128,7 +1225,7 @@ function createPage(){
   if(name===null)return;
   const clean=name.replace(/\s+/g," ").trim()||proposed;
   const page={id:createPageId(),name:clean.slice(0,60),data:[],updatedAt:new Date().toISOString()};
-  pages.push(page);activePageId=page.id;data=page.data;filter="all";query="";
+  pages.push(page);resetTagSelection();activePageId=page.id;data=page.data;filter="all";query="";
   if($("search"))$("search").value="";
   persistPages();render();showToast("Создана новая страница");
 }
@@ -1141,6 +1238,7 @@ function renameActivePage(){
   page.name=clean.slice(0,60);page.updatedAt=new Date().toISOString();persistPages();render();showToast("Название страницы сохранено");
 }
 async function deleteActivePage(){
+  resetTagSelection();
   const page=getActivePage();
   if(!page)return;
   const isLast=pages.length===1;
@@ -1264,7 +1362,30 @@ function renderList(){
     box.appendChild(ta);editorWrap.appendChild(box);
     taskLine.append(taskToggle,saveTask);
     info.append(tag,taskLine,editorWrap);
-    row.append(check,num,info);
+    const actions=document.createElement("div");
+    actions.className="rowActions";
+
+    const cancelBtn=document.createElement("button");
+    cancelBtn.type="button";cancelBtn.className="rowAction rowCancel";cancelBtn.textContent="×";
+    cancelBtn.title="Отменить выбор";cancelBtn.setAttribute("aria-label","Отменить выбор тегов");
+
+    const selectBtn=document.createElement("button");
+    selectBtn.type="button";selectBtn.className="rowAction rowSelect";
+    selectBtn.classList.toggle("selected",selectedTagIds.has(item.id));
+    selectBtn.title=selectedTagIds.has(item.id)?"Снять выбор":"Выбрать тег";
+    selectBtn.setAttribute("aria-label",selectedTagIds.has(item.id)?`Снять выбор ${item.tag}`:`Выбрать ${item.tag}`);
+
+    const copyBtn=document.createElement("button");
+    copyBtn.type="button";copyBtn.className="rowAction rowCopy";copyBtn.textContent="⧉";
+    copyBtn.title="Скопировать тег";copyBtn.setAttribute("aria-label",`Скопировать ${item.tag}`);
+
+    const editBtn=document.createElement("button");
+    editBtn.type="button";editBtn.className="rowAction rowEdit";editBtn.textContent="✎";
+    editBtn.title="Изменить тег";editBtn.setAttribute("aria-label",`Изменить ${item.tag}`);
+
+    actions.append(cancelBtn,selectBtn,copyBtn,editBtn);
+    row.classList.toggle("selection-mode",selectionMode);
+    row.append(check,num,info,actions);
     frag.appendChild(row);
   });
   list.replaceChildren(frag);
@@ -1284,7 +1405,7 @@ function renderSummary(){
   $("progressTrack").setAttribute("aria-valuenow",String(percent));
 }
 function render(){
-  renderPages();renderLastSaved();renderTabs();renderSummary();renderList();
+  renderPages();renderLastSaved();renderTabs();renderSummary();updateSelectionFooter();renderList();
 }
 
 // Один набор обработчиков вместо обработчика на каждом теге. Это заметно снижает
@@ -1293,7 +1414,7 @@ tabs.addEventListener("click",e=>{
   const b=e.target.closest(".tab");
   if(!b)return;
   filter=b.dataset.filter||"all";
-  renderSummary();renderList();
+  renderTabs();renderSummary();renderList();
 });
 
 function rowItemFromTarget(target){
@@ -1320,10 +1441,102 @@ function setTaskEditor(row,item,open,focus=false){
   toggle.setAttribute("aria-expanded",String(open));
   if(open&&focus&&ta)requestAnimationFrame(()=>ta.focus());
 }
+function setSelectionMode(enabled,initialId=null){
+  selectionMode=!!enabled;
+  if(!selectionMode) selectedTagIds.clear();
+  else if(initialId!==null) selectedTagIds.add(initialId);
+  document.body.classList.toggle("selection-mode-active",selectionMode);
+  updateSelectionFooter();
+  renderList();
+}
+function toggleTagSelection(id){
+  if(selectedTagIds.has(id)) selectedTagIds.delete(id);
+  else selectedTagIds.add(id);
+  if(!selectedTagIds.size){
+    selectionMode=false;
+    document.body.classList.remove("selection-mode-active");
+  }
+  updateSelectionFooter();
+  renderList();
+}
+function updateSelectionFooter(){
+  const btn=$("deleteAll"), count=selectedTagIds.size;
+  const clearBtn=$("clearChecks");
+  if(selectionMode){
+    btn.textContent=count?`Удалить выбранные (${count})`:"Удалить выбранные";
+    btn.title=count?`Удалить выбранные теги: ${count}`:"Выбери теги для удаления";
+    btn.disabled=!count;
+
+    const total=data.length;
+    const allSelected=total>0 && selectedTagIds.size===total;
+    clearBtn.textContent=allSelected?"Снять все":"Отметить все";
+    clearBtn.title=allSelected
+      ?"Снять выбор со всех тегов для копирования"
+      :"Выбрать все теги для копирования";
+    clearBtn.disabled=!total;
+  }else{
+    btn.textContent="Удалить теги";
+    btn.title="Удалить все теги текущей страницы";
+    btn.disabled=false;
+
+    clearBtn.textContent="Снять отметки";
+    clearBtn.title="Снять все отметки «Выполнено»";
+    clearBtn.disabled=false;
+  }
+}
+async function copyTags(ids){
+  const wanted=new Set(ids);
+  const items=data.filter(item=>wanted.has(item.id));
+  if(!items.length)return;
+  const lines=items.map(item=>{
+    const tag=String(item.tag||"").trim();
+    const task=String(item.task||"").trim().replace(/\\s*[\\r\\n]+\\s*/g," ");
+    return task ? `${tag} — ${task}` : tag;
+  });
+  const text=lines.join("\n");
+  try{
+    if(navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
+    else{
+      const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();
+    }
+    showToast(items.length===1?`Скопирован тег${items[0].task?" с заданием":""}: ${items[0].tag}`:`Скопировано тегов с заданиями: ${items.length}`);
+  }catch(_){showToast("Не удалось скопировать тег");}
+}
+function enterTagSelection(id){
+  setSelectionMode(true,id);
+  if(navigator.vibrate)navigator.vibrate(25);
+}
+
 list.addEventListener("click",e=>{
   const ref=rowItemFromTarget(e.target);
   if(!ref)return;
   const {row,item}=ref;
+
+  const editBtn=e.target.closest(".rowEdit");
+  if(editBtn){
+    e.stopPropagation();
+    openEdit(item.id);
+    return;
+  }
+  const cancelBtn=e.target.closest(".rowCancel");
+  if(cancelBtn){
+    e.stopPropagation();
+    setSelectionMode(false);
+    return;
+  }
+  const selectBtn=e.target.closest(".rowSelect");
+  if(selectBtn){
+    e.stopPropagation();
+    toggleTagSelection(item.id);
+    return;
+  }
+  const copyBtn=e.target.closest(".rowCopy");
+  if(copyBtn){
+    e.stopPropagation();
+    const ids=selectedTagIds.size?[...selectedTagIds]:[item.id];
+    copyTags(ids);
+    return;
+  }
   if(e.target.closest(".check")){
     e.stopPropagation();
     item.done=!item.done;
@@ -1331,6 +1544,11 @@ list.addEventListener("click",e=>{
     updateRenderedRowState(row,item);
     renderTabs();renderSummary();
     if(filter==="done"||filter==="todo")renderList();
+    return;
+  }
+  if(selectionMode && !e.target.closest("button,textarea,input,select")){
+    e.stopPropagation();
+    toggleTagSelection(item.id);
     return;
   }
   const taskToggle=e.target.closest(".taskToggle");
@@ -1357,7 +1575,16 @@ list.addEventListener("contextmenu",e=>{
   const ref=rowItemFromTarget(e.target);
   if(!ref)return;
   if(e.target.closest("textarea,input,select,button"))return;
-  e.preventDefault();openEdit(ref.item.id);
+  // Android Chrome can emit contextmenu after the 650 ms long-press.
+  // The long-press selection has priority and must not fall through to edit mode.
+  if(longPressTriggered){
+    e.preventDefault();
+    e.stopPropagation();
+    longPressTriggered=false;
+    return;
+  }
+  e.preventDefault();
+  openEdit(ref.item.id);
 });
 list.addEventListener("touchstart",e=>{
   if(e.target.closest("textarea,input,select,button"))return;
@@ -1373,8 +1600,7 @@ function startLongPress(id){
   longPressTriggered=false;
   longPressTimer=setTimeout(()=>{
     longPressTriggered=true;
-    openEdit(id);
-    if(navigator.vibrate) navigator.vibrate(25);
+    enterTagSelection(id);
   },650);
 }
 function cancelLongPress(){
@@ -1564,7 +1790,7 @@ function buildGroupedTextReport(kind="all"){
   const sections=[];
   let number=1;
   for(const page of pages){
-    const items=page.data.filter(item=>kind==="all"||(kind==="done"?item.done:!item.done));
+    const items=page.data.filter(item=>kind==="all"||(kind==="task"?!!String(item.task||"").trim():(kind==="done"?item.done:!item.done)));
     if(!items.length)continue;
     const numbered=items.map(item=>{
       const mark=item.done?"✔️":"О";
@@ -1591,7 +1817,7 @@ async function shareTextPayload(title,text){
   }catch(e){if(e.name!=="AbortError")showToast("Не удалось передать текст");}
 }
 async function shareTextReport(kind){
-  const labels={all:"Весь список",done:"Выполненные",todo:"Невыполненные",pages:"Титулы"};
+  const labels={all:"Весь список",done:"Выполненные",todo:"Невыполненные",task:"Задания",pages:"Титулы"};
   const text=kind==="pages"?buildTitlesReport():buildGroupedTextReport(kind);
   await shareTextPayload(`${docTitle} — ${labels[kind]}`,text);
 }
@@ -1689,10 +1915,10 @@ function updateOcrConfigStatus(){
   const gemini=localStorage.getItem('kipGeminiApiKey')||'';
   const key=localStorage.getItem('kipOcrSpaceKey')||'helloworld';
   const backend=localStorage.getItem('kipOcrApiUrl')||'';
-  if(gemini) $("ocrConfigStatus").textContent='Режим: Google Gemini Vision → OCR.space fallback • ключ сохранён на устройстве';
-  else if(backend) $("ocrConfigStatus").textContent=`Режим: Google Vision backend (${backend})`;
-  else if(key==='helloworld') $("ocrConfigStatus").textContent='Gemini Vision не активен • резерв OCR.space только при HTTPS';
-  else $("ocrConfigStatus").textContent='Gemini не настроен • резерв OCR.space • ваш API-ключ';
+  if(gemini) $("ocrConfigStatus").textContent='Gemini Vision активен • резерв OCR при ошибке';
+  else if(backend) $("ocrConfigStatus").textContent='Google Vision backend активен';
+  else if(key==='helloworld') $("ocrConfigStatus").textContent='Gemini не настроен • нажми «Gemini» для API-ключа';
+  else $("ocrConfigStatus").textContent='Gemini не настроен • резерв OCR.space';
 }
 function configureOcr(){
   const current=localStorage.getItem('kipGeminiApiKey')||'';
@@ -1777,23 +2003,90 @@ function extractTagsSmart(text){
 }
 
 function cleanImportedTask(value){
-  let t=String(value||'').replace(/^[\s\-–—:;,.|]+|[\s\-–—:;,.|]+$/g,'').replace(/\s+/g,' ').trim();
+  let t=String(value||'')
+    .replace(/\u00a0/g,' ')
+    .replace(/[\r\n\t]+/g,' ')
+    .replace(/\s+/g,' ')
+    .replace(/^[\s\-–—:;,.|•·]+|[\s\-–—:;,.|•·]+$/g,'')
+    .trim();
   if(!t)return '';
-  if(/^установка\s*\d{4}$/i.test(t)||/^unit\s*\d{4}$/i.test(t)||/^\d{4}$/.test(t))return '';
-  if(/^(emerson|wika|chongqing\s+chuanyi|tesey|эмерсон)$/i.test(t))return '';
-  if(/^[A-Z0-9][A-Z0-9 ._\/-]{1,45}$/.test(t) && !/[А-ЯЁ]/i.test(t))return '';
-  return t.slice(0,180);
+  // Убираем служебные поля таблиц, которые не являются заданием.
+  t=t.replace(/^\s*\d+\.\s*(?:✔️?|✓|☑|О|O|0)?\s*[—–:-|•·]*\s*/i,'')
+     .replace(/^\s*(?:✔️?|✓|☑|О|O|0)\s*[—–:-|•·]+\s*/i,'')
+     .replace(/\b(?:\d{1,2}[./]\d{1,2}[./]\d{2,4}|\d{4}-\d{2}-\d{2})\b/g,' ')
+     .replace(/\b(?:unit|установка)\s*\d{4}\b/gi,' ')
+     .replace(/\b(?:кип\s*[—-]?\s*чек[- ]?лист|всего|выполнено|невыполнено)\b/gi,' ')
+     .replace(/^\s*={2,}.*?={2,}\s*$/,' ')
+     .replace(/\s{2,}/g,' ')
+     .trim();
+  if(!t)return '';
+  if(/^\d{4}$/.test(t))return '';
+  if(/^(?:страница|page)\s*\d+$/i.test(t))return '';
+  if(/^(?:emerson|wika|chongqing\s+chuanyi|tesey|эмерсон)$/i.test(t))return '';
+  if(/^[A-Z0-9][A-Z0-9 ._\/-]{1,45}$/.test(t) && !/[А-ЯЁа-яё]/.test(t))return '';
+  if(/^[\d\s.,;:/()\-–—]+$/.test(t))return '';
+  return t.slice(0,240);
 }
+function completeMeaningfulTaskPhrase(value){
+  let t=String(value||"").replace(/\s+/g," ").trim();
+  if(!t)return "";
+  // Не угадываем отсутствующие технические данные. Дополняем только очевидные
+  // производственные фразы, когда начало фразы однозначно указывает на действие.
+  const completions=[
+    [/\bнет\s+теговой\s+би\b/i,"нет теговой бирки"],
+    [/\bнет\s+обратно\b/i,"нет обратной связи"],
+    [/\bнет\s+обратн\w*\b/i,"нет обратной связи"],
+    [/\bнет\s+питани\w*\b/i,"нет питания"],
+    [/\bнет\s+связ\w*\b/i,"нет связи"],
+    [/\bнет\s+прибор\w*\b/i,"нет прибора"],
+    [/\bнет\s+датчик\w*\b/i,"нет датчика"],
+    [/\bнет\s+кабел\w*\b/i,"нет кабеля"],
+    [/\bнет\s+воздух\w*\b/i,"нет воздуха"],
+    [/\bнет\s+пневм\w*\b/i,"нет пневмопитания"]
+  ];
+  for(const [re,replacement] of completions){if(re.test(t))t=t.replace(re,replacement);}
+  return t;
+}
+function extractMeaningfulWords(value){
+  const t=String(value||"").replace(/\s+/g," ").trim();
+  if(!t)return "";
+  // Сохраняем цельные слова и короткие технические обозначения, удаляя
+  // отдельные OCR-фрагменты без самостоятельного смысла.
+  const tokens=t.split(" ").filter(Boolean);
+  const kept=tokens.filter(tok=>{
+    const clean=tok.replace(/^[^A-Za-zА-ЯЁа-яё0-9]+|[^A-Za-zА-ЯЁа-яё0-9%№/.-]+$/g,"");
+    if(!clean)return false;
+    if(/^[^A-Za-zА-ЯЁа-яё0-9]+$/.test(clean))return false;
+    if(clean.length===1 && !/[А-ЯЁа-яёA-Za-z0-9]/.test(clean))return false;
+    return true;
+  });
+  return kept.join(" ");
+}
+
 function taskLikeText(value){
-  const t=cleanImportedTask(value);
+  let t=cleanImportedTask(value);
   if(!t)return '';
-  const hasWords=/[А-ЯЁа-яё]/.test(t)||/\b(check|replace|repair|broken|sensor|install|verify|change|перенастро|замен|провер|оборван|неисправ|сенсор|датчик|ремонт|монтаж|проверить)\b/i.test(t);
-  return hasWords?t:'';
+  t=extractMeaningfulWords(t);
+  if(!t)return '';
+  t=completeMeaningfulTaskPhrase(t);
+  const hasMeaning=/[А-ЯЁа-яё]/.test(t) || /\b(?:check|replace|repair|broken|sensor|install|verify|change|перенастро|замен|провер|оборван|неисправ|сенсор|датчик|ремонт|монтаж|клапан|соленоид|манифольд|утечк|давлен|бирк|шильдик|кабель|муфт|болт|высот|фото|устран|погнут|клин|заед|связ|HART|прибор|питани|пневм|воздух)\b/i.test(t);
+  return hasMeaning?t.slice(0,240):'';
 }
 function normalizeDoneMark(value){
   const v=String(value??'').trim().toLowerCase();
   if(!v)return false;
-  if(/^(✓|✔|☑|☒|✕|✖|×|\+|v|да|yes|true|done|готово|выполнено|1)$/i.test(v))return true;
+  return /^(✓|✔|☑|☒|✕|✖|×|\+|v|да|yes|true|done|готово|выполнено|1)$/i.test(v);
+}
+function stripTagFromContext(text){
+  let t=String(text||'');
+  t=t.replace(/\b\d{4}\s*-?\s*[A-ZА-ЯЁ]{2,8}\s*-?\s*[0-9OQILSZ]{2,4}\s*[A-ZА-ЯЁ]?\b/gi,' ');
+  return cleanImportedTask(t);
+}
+function isNoiseImportLine(line){
+  const t=String(line||'').trim();
+  if(!t)return true;
+  if(/^(?:кип\s*[—-]?\s*чек[- ]?лист|всего\s*:|выполнено\s*:|невыполнено\s*:|===|---|добавить|выполнено)$/i.test(t))return true;
+  if(/^(?:основная\s+страница|страница\s+\d+)$/i.test(t))return true;
   return false;
 }
 function extractJsonTagRecords(text){
@@ -1801,8 +2094,8 @@ function extractJsonTagRecords(text){
   if(!raw || !/^[\[{]/.test(raw))return [];
   let parsed;try{parsed=JSON.parse(raw)}catch(_){return []}
   const out=[];
-  const walk=(node, inherited={})=>{
-    if(Array.isArray(node)){node.forEach(x=>walk(x,inherited));return;}
+  const walk=(node)=>{
+    if(Array.isArray(node)){node.forEach(walk);return;}
     if(!node || typeof node!=='object')return;
     const keys=Object.keys(node);
     const tagKeyName=keys.find(k=>/^(tag|тег|tag_number|tagNumber)$/i.test(k));
@@ -1815,11 +2108,11 @@ function extractJsonTagRecords(text){
         if(tag){
           const taskKey=keys.find(k=>/^(task|задание|assignment|note|комментарий|comment)$/i.test(k));
           const doneKey=keys.find(k=>/^(done|completed|complete|выполнено|статус|status)$/i.test(k));
-          out.push({unit:tag.slice(0,4),tag,done:normalizeDoneMark(node[doneKey])||/^(выполнено|готово|done|true|1)$/i.test(String(node[doneKey]??'')),task:taskLikeText(node[taskKey]??'')});
+          out.push({unit:tag.slice(0,4),tag,done:normalizeDoneMark(node[doneKey]),task:taskLikeText(node[taskKey]??'')});
         }
       }
     }
-    keys.forEach(k=>walk(node[k],inherited));
+    keys.forEach(k=>walk(node[k]));
   };
   walk(parsed);
   return out;
@@ -1847,24 +2140,34 @@ function extractTagRecordsFromText(text){
         if(!tag)continue;
         const start=m.index+m[0].length;
         const end=i+1<matches.length?matches[i+1].index:line.length;
-        const fragment=line.slice(start,end);
-        const before=line.slice(0,m.index);
-        const rowContext=before+' '+fragment;
-        const done=/(^|[\s|;\t])(✓|✔|☑|☒|✕|✖|×|\+|\-|0|v|1|да|yes|true|done|выполнено|готово)(?=[\s|;\t]|$)/i.test(rowContext)
-          || /[✓✔☑☒✕✖×]/.test(rowContext);
-        records.push(current={unit:tag.slice(0,4),tag,done,task:taskLikeText(fragment)});
+        const after=line.slice(start,end);
+        const before=i===0?line.slice(0,m.index):'';
+        const context=stripTagFromContext(`${before} ${after}`);
+        const markContext=`${before} ${after}`;
+        const done=/(^|[\s|;,:\t])(✓|✔|☑|☒|✕|✖|×|\+|v|да|yes|true|done|выполнено|готово)(?=[\s|;,:\t]|$)/i.test(markContext)
+          ||/[✓✔☑☒✕✖×]/.test(markContext)
+          || /(^|\s)[+v]\s*$/i.test(markContext.trim());
+        current={unit:tag.slice(0,4),tag,done,task:taskLikeText(context)};
+        records.push(current);
       }
-    }else if(current){
-      const task=taskLikeText(line.replace(/^[\-–—:|]+/,'').trim());
-      if(task && task.length<=180 && !/^[0-9\s.,;:/_-]+$/.test(task)) current.task=current.task||task;
+    }else if(current && !isNoiseImportLine(line)){
+      const continuation=taskLikeText(line.replace(/^[\-–—:|•]+/,'').trim());
+      if(continuation){
+        const combined=cleanImportedTask(`${current.task} ${continuation}`);
+        current.task=completeMeaningfulTaskPhrase(combined).slice(0,240);
+      }
     }
   }
   const map=new Map();
   for(const r of records){
     const key=tagKey(r.tag),prev=map.get(key);
-    if(!prev)map.set(key,r);else{prev.done=prev.done||r.done;prev.task=prev.task||r.task;}
+    if(!prev)map.set(key,r);
+    else{
+      prev.done=prev.done||r.done;
+      if(r.task)prev.task=prev.task?cleanImportedTask(`${prev.task} ${r.task}`):r.task;
+    }
   }
-  return [...map.values()];
+  return [...map.values()].map(r=>({...r,task:cleanImportedTask(r.task)}));
 }
 async function imageToJpegBlob(file,maxWidth=2400,maxHeight=1900,quality=.88){
   return new Promise((resolve,reject)=>{
@@ -1927,10 +2230,10 @@ async function blobToBase64(blob){
 async function analyzeGeminiTile(blob,tags,apiKey){
   const base64=await blobToBase64(blob);
   const knownBlock=tags.length?`\nТеги, которые уже есть в текущем списке. Используй их как подсказку для исправления одной явной OCR-ошибки, но НЕ ограничивай распознавание только ими:\n${tags.join(", ")}`:'';
-  const prompt=`Ты анализируешь ФОТОГРАФИЮ ТАБЛИЦЫ КИП. Работай ПОСТРОЧНО: одна строка таблицы = один тег.
+  const prompt=`Ты анализируешь ФОТОГРАФИЮ ТАБЛИЦЫ КИП. Работай ПОСТРОЧНО: одна строка списка/таблицы/рукописной записи = один или несколько тегов. Фото может быть печатным, рукописным или смешанным.
 
 Найди ВСЕ чётко читаемые теги формата 4 цифры + код прибора 2–8 букв + номер 2–4 цифры + необязательная буква, например 2161-FT-200.
-Не выдумывай теги. Если символ не читается уверенно, лучше пропусти строку.
+Не выдумывай теги. Если символ не читается уверенно, лучше пропусти его. Если в одной записи указан общий базовый тег и несколько суффиксов A/B/C (например 450A, 450B, 450C или «450 A,B,C»), создай отдельный объект для каждого явно указанного суффикса.
 ${knownBlock}
 
 ОПРЕДЕЛЕНИЕ ВЫПОЛНЕНИЯ — КРИТИЧЕСКИ ВАЖНО:
@@ -1943,7 +2246,7 @@ ${knownBlock}
 
 ОПРЕДЕЛЕНИЕ ЗАДАНИЯ:
 - task заполняй ТОЛЬКО если рядом с конкретной строкой видна запись/примечание, явно относящаяся к этому тегу.
-- Учитывай рукописный и печатный текст, если он выглядит как состояние, неисправность или требуемое действие.
+- Учитывай рукописный и печатный текст, включая короткие пометки вроде «фото», «устранено», «нет приборов», если они относятся к этой строке. Не удаляй технические слова только потому, что они короткие.
 - Примеры: «сенсор оборван», «заменить датчик», «нет связи HART».
 - Не придумывай текст и не расширяй смысл.
 - Если связь записи с тегом сомнительна, task пустой.
@@ -1977,11 +2280,20 @@ async function runGeminiVision(image){
   const tags=[...new Set(knownTags().map(x=>String(x).trim().toUpperCase()).filter(Boolean))];
   const tiles=await makeVisionTiles(image);
   setProgress(25);
-  const results=[];
-  for(let i=0;i<tiles.length;i++){
-    setProgress(25+Math.round((i/tiles.length)*55));
-    results.push(await analyzeGeminiTile(tiles[i],tags,apiKey).catch(e=>({__error:e})));
+  const results=new Array(tiles.length);
+  // Длинные фото могут разбиваться на несколько фрагментов. Два параллельных
+  // запроса заметно сокращают ожидание, но не создают лишнюю нагрузку на телефон/сеть.
+  let cursor=0;
+  async function worker(){
+    while(true){
+      const i=cursor++;
+      if(i>=tiles.length)return;
+      setProgress(25+Math.round((i/tiles.length)*55));
+      results[i]=await analyzeGeminiTile(tiles[i],tags,apiKey).catch(e=>({__error:e}));
+    }
   }
+  await Promise.all(Array.from({length:Math.min(2,tiles.length)},()=>worker()));
+  setProgress(80);
   const errors=results.filter(x=>x?.__error).map(x=>x.__error);
   const raw=results.flatMap(x=>Array.isArray(x)?x:[]);
   if(!raw.length)throw(errors[0]||new Error("Gemini не нашёл теги"));
@@ -2097,13 +2409,6 @@ function renderImportCandidates(){
   }
   const existing=new Set(data.map(x=>tagKey(x.tag)));
   $("photoImportLegend").classList.add("ready");
-  const geminiActive=!!localStorage.getItem('kipGeminiApiKey');
-  if(!geminiActive){
-    const note=document.createElement('div');
-    note.className='ocrVisionOnlyWarn';
-    note.textContent='Резервный OCR читает в основном печатный текст. Галочки, зачёркивания и рукописные записи по строкам лучше распознаёт Gemini Vision — проверь их перед добавлением.';
-    box.appendChild(note);
-  }
   ocrCandidates.forEach(candidate=>{
     const tag=String(candidate||'').toUpperCase(),already=existing.has(tagKey(tag));
     const meta=ocrCandidateMeta.get(tagKey(tag))||{completed:false,task:''};
@@ -2324,7 +2629,7 @@ function cycleFont(){
 }
 
 function openDryReport(kind){
-  const labels={all:"Весь список",done:"Выполненные",todo:"Невыполненные"};
+  const labels={all:"Весь список",done:"Выполненные",todo:"Невыполненные",task:"Задания"};
   const text=kind==="all"?buildGroupedTextReport("all"):buildGroupedTextReport(kind);
   $("dryListOverlay").classList.remove("show");
   $("fullReportTitle").textContent=`Сухой список · ${labels[kind]||""}`;
@@ -2429,6 +2734,7 @@ $("exportFileBtn").onclick=handleExportFile;
 $("exportAllBtn").onclick=()=>shareTextReport("all");
 $("exportDoneBtn").onclick=()=>shareTextReport("done");
 $("exportTodoBtn").onclick=()=>shareTextReport("todo");
+$("exportTaskBtn").onclick=()=>shareTextReport("task");
 $("exportOverlay").addEventListener("click",e=>{if(e.target===$("exportOverlay"))closeExportMenu();});
 $("themeBtn").onclick=cycleTheme;
 $("fontBtn").onclick=cycleFont;
@@ -2450,6 +2756,7 @@ $("closeBtn").onclick=closeModal;
 $("cameraChoice").onclick=()=>{setAddMode("camera"); setTimeout(()=>$("cameraInput").click(),50);};
 $("photoChoice").onclick=()=>{setAddMode("photo"); setTimeout(()=>$("photoInput").click(),50);};
 $("fileChoice").onclick=()=>setAddMode("file");
+$("configureGeminiBtn").onclick=configureOcr;
 $("ocrBackBtn").onclick=()=>{
   $("importList").innerHTML=""; $("importActions").style.display="none"; ocrCandidateMeta=new Map();
   $("ocrStatus").textContent=""; $("ocrProgressWrap").style.display="none";
@@ -2498,11 +2805,45 @@ $("saveBtn").onclick=saveModal;
 deleteBtn.onclick=deleteCurrent;
 overlay.addEventListener("click",e=>{if(e.target===overlay)closeModal();});
 $("deleteAll").onclick=async()=>{
+  if(selectionMode){
+    const ids=[...selectedTagIds];
+    if(!ids.length){showToast("Выбери теги для удаления");return;}
+    const count=ids.length;
+    if(await askConfirm(`Удалить выбранные теги: ${count}?`,"Удаление выбранных тегов","Удалить")){
+      const set=new Set(ids);
+      data=data.filter(item=>!set.has(item.id));
+      selectedTagIds.clear();selectionMode=false;document.body.classList.remove("selection-mode-active");
+      save();filter="all";updateSelectionFooter();render();showToast(`Удалено тегов: ${count}`);
+    }
+    return;
+  }
   if(await askConfirm("Удалить ВЕСЬ список? Все позиции, включая добавленные и отредактированные, будут удалены.","Удаление тегов","Удалить")){
     data=[];save();filter="all";render();showToast("Все теги удалены");
   }
 };
 $("clearChecks").onclick=async()=>{
+  // В режиме выборки эта же кнопка управляет ТОЛЬКО выбором для копирования/удаления.
+  // Статус «Выполнено» при этом вообще не изменяется.
+  if(selectionMode){
+    const total=data.length;
+    if(!total){showToast("На странице нет тегов");return;}
+    const allSelected=selectedTagIds.size===total;
+    if(allSelected){
+      selectedTagIds.clear();
+      updateSelectionFooter();
+      renderList();
+      showToast("Выбор снят со всех тегов");
+    }else{
+      selectedTagIds=new Set(data.map(item=>item.id));
+      updateSelectionFooter();
+      renderList();
+      showToast(`Выбраны все теги: ${total}`);
+    }
+    return;
+  }
+
+  // В обычном режиме кнопка сохраняет прежнюю функцию:
+  // снимает только статус «Выполнено».
   const marked=data.filter(item=>item.done).length;
   if(!marked){showToast("Отметок для сброса нет");return;}
   if(await askConfirm(`Снять отметки «Выполнено» у ${marked} позиций?`,"Снять отметки","Снять")){
@@ -2513,8 +2854,24 @@ document.addEventListener("selectstart",e=>{
   if(e.target.closest("input,textarea,select,[contenteditable=true]")) return;
   if(e.target.closest("button,.pageChip,.tab,.row,.utilityRow,.footer,.fab,.searchClose")) e.preventDefault();
 });
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeDuplicateDialog();$("dryListOverlay").classList.remove("show");closeDryReport();if(confirmResolver)finishConfirm(false);}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();closeDuplicateDialog();if(selectionMode){setSelectionMode(false);}$("dryListOverlay").classList.remove("show");closeDryReport();if(confirmResolver)finishConfirm(false);}});
 
+
+// v58: браузеры Android иногда оставляют старые размеры viewport после поворота.
+// Даём движку один кадр на перерасчёт, не меняя данные и не трогая активное поле ввода.
+let viewportRefreshTimer=0;
+function refreshAfterViewportChange(){
+  clearTimeout(viewportRefreshTimer);
+  viewportRefreshTimer=setTimeout(()=>{
+    document.documentElement.style.setProperty("--viewport-h", `${window.innerHeight}px`);
+    if(!document.activeElement || !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)){
+      renderTabs(); renderList();
+    }
+  },80);
+}
+window.addEventListener("orientationchange",()=>requestAnimationFrame(refreshAfterViewportChange),{passive:true});
+window.addEventListener("resize",()=>{ if(Math.abs((window.innerWidth||0)-((window.visualViewport&&window.visualViewport.width)||window.innerWidth))>2) return; refreshAfterViewportChange(); },{passive:true});
+if(window.visualViewport) window.visualViewport.addEventListener("resize",refreshAfterViewportChange,{passive:true});
 
 // PWA installation: Chromium may expose a native install prompt.
 // Safari/iOS keeps its normal "Add to Home Screen" browser flow.

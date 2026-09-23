@@ -2,10 +2,11 @@
   "name": "КИП-чеклист",
   "short_name": "КИП-чек",
   "description": "Чек-лист КИП для инженера",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f5f7fa",
+  "background_color": "#0b1728",
   "theme_color": "#1769e0",
   "orientation": "portrait-primary",
   "icons": [
@@ -19,7 +20,7 @@
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ]
 }
