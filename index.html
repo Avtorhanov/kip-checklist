@@ -11,7 +11,7 @@
 <link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-<title>КИП — чек-лист • v66</title>
+<title>КИП — чек-лист • v67.1</title>
 <style>
 :root{
   --fontScale:1;
@@ -835,7 +835,7 @@ button,.choice,.tab,.pageChip,.pageAction,.fontChoice{
     </div>
 
     <div id="photoForm" style="display:none">
-      <div class="ocrModeRow"><div class="mini" id="ocrConfigStatus">Распознавание: Gemini Vision → резервный OCR</div><button class="secondary" id="configureGeminiBtn" type="button">Gemini</button></div>
+      <div class="ocrModeRow"><div class="mini" id="ocrConfigStatus">Распознавание: OCR.space Engine 2 → Engine 3</div></div>
       <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none">
       <input id="photoInput" type="file" accept="image/*" style="display:none">
       <button class="action" id="ocrBackBtn" type="button" style="width:100%;margin-top:10px">← Другой способ</button>
@@ -1490,17 +1490,46 @@ async function copyTags(ids){
   if(!items.length)return;
   const lines=items.map(item=>{
     const tag=String(item.tag||"").trim();
-    const task=String(item.task||"").trim().replace(/\\s*[\\r\\n]+\\s*/g," ");
+    const task=String(item.task||"").trim().replace(/\s*[\r\n]+\s*/g," ");
     return task ? `${tag} — ${task}` : tag;
   });
   const text=lines.join("\n");
+
+  let copied=false;
+  // Android может иметь navigator.clipboard, но отклонять writeText().
+  // В этом случае обязательно пробуем старый совместимый способ.
   try{
-    if(navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
-    else{
-      const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();
+    if(window.isSecureContext && navigator.clipboard?.writeText){
+      await navigator.clipboard.writeText(text);
+      copied=true;
     }
+  }catch(_){}
+
+  if(!copied){
+    try{
+      const ta=document.createElement("textarea");
+      ta.value=text;
+      ta.setAttribute("readonly","");
+      ta.style.position="fixed";
+      ta.style.left="-9999px";
+      ta.style.top="0";
+      ta.style.width="1px";
+      ta.style.height="1px";
+      ta.style.opacity="0.01";
+      document.body.appendChild(ta);
+      ta.focus({preventScroll:true});
+      ta.select();
+      ta.setSelectionRange(0,text.length);
+      copied=document.execCommand("copy");
+      ta.remove();
+    }catch(_){}
+  }
+
+  if(copied){
     showToast(items.length===1?`Скопирован тег${items[0].task?" с заданием":""}: ${items[0].tag}`:`Скопировано тегов с заданиями: ${items.length}`);
-  }catch(_){showToast("Не удалось скопировать тег");}
+  }else{
+    showToast("Не удалось скопировать тег. Повтори на HTTPS-странице.");
+  }
 }
 function enterTagSelection(id){
   setSelectionMode(true,id);
@@ -1572,19 +1601,13 @@ list.addEventListener("click",e=>{
   if(longPressTriggered){e.preventDefault();longPressTriggered=false;}
 });
 list.addEventListener("contextmenu",e=>{
-  const ref=rowItemFromTarget(e.target);
-  if(!ref)return;
-  if(e.target.closest("textarea,input,select,button"))return;
-  // Android Chrome can emit contextmenu after the 650 ms long-press.
-  // The long-press selection has priority and must not fall through to edit mode.
-  if(longPressTriggered){
+  // На Android долгий тап может породить contextmenu. Он никогда не открывает
+  // редактирование: редактирование доступно только через карандаш.
+  if(e.target.closest(".row")){
     e.preventDefault();
     e.stopPropagation();
     longPressTriggered=false;
-    return;
   }
-  e.preventDefault();
-  openEdit(ref.item.id);
 });
 list.addEventListener("touchstart",e=>{
   if(e.target.closest("textarea,input,select,button"))return;
@@ -1780,10 +1803,10 @@ function pageTitleForReport(page){
   return name||"Без названия";
 }
 function formatReportItems(items){
-  const mark=item=>item.done?"✔️":"О";
+  const mark=item=>item.done?"✔️":"";
   return items.map((item,index)=>{
     const task=String(item.task||"").trim().replace(/\s*[\r\n]+\s*/g," ");
-    return `${index+1}. ${mark(item)} ${item.tag}${task?` — ${task}`:""}`;
+    return `${index+1}. ${mark(item)}${mark(item)?" ":""}${item.tag}${task?` — ${task}`:""}`;
   }).join("\n");
 }
 function buildGroupedTextReport(kind="all"){
@@ -1793,9 +1816,9 @@ function buildGroupedTextReport(kind="all"){
     const items=page.data.filter(item=>kind==="all"||(kind==="task"?!!String(item.task||"").trim():(kind==="done"?item.done:!item.done)));
     if(!items.length)continue;
     const numbered=items.map(item=>{
-      const mark=item.done?"✔️":"О";
+      const mark=item.done?"✔️":"";
       const task=String(item.task||"").trim().replace(/\s*[\r\n]+\s*/g," ");
-      return `${number++}. ${mark} ${item.tag}${task?` — ${task}`:""}`;
+      return `${number++}. ${mark}${mark?" ":""}${item.tag}${task?` — ${task}`:""}`;
     }).join("\n");
     sections.push(`=== ${pageTitleForReport(page)} ===\n${numbered}`);
   }
@@ -1912,21 +1935,11 @@ function extractTagsFromOCR(text){
 }
 function knownTags(){ return data.map(x=>x.tag).filter(Boolean); }
 function updateOcrConfigStatus(){
-  const gemini=localStorage.getItem('kipGeminiApiKey')||'';
   const key=localStorage.getItem('kipOcrSpaceKey')||'helloworld';
   const backend=localStorage.getItem('kipOcrApiUrl')||'';
-  if(gemini) $("ocrConfigStatus").textContent='Gemini Vision активен • резерв OCR при ошибке';
-  else if(backend) $("ocrConfigStatus").textContent='Google Vision backend активен';
-  else if(key==='helloworld') $("ocrConfigStatus").textContent='Gemini не настроен • нажми «Gemini» для API-ключа';
-  else $("ocrConfigStatus").textContent='Gemini не настроен • резерв OCR.space';
-}
-function configureOcr(){
-  const current=localStorage.getItem('kipGeminiApiKey')||'';
-  const key=prompt('API-ключ Google Gemini для теста. Получи его в Google AI Studio. Оставь пустым, чтобы использовать только OCR.space.',current);
-  if(key===null)return;
-  const clean=key.trim();
-  if(clean) localStorage.setItem('kipGeminiApiKey',clean); else localStorage.removeItem('kipGeminiApiKey');
-  updateOcrConfigStatus();
+  if(backend) $("ocrConfigStatus").textContent='OCR: Engine 2 → Engine 3 • Google Vision backend сохранён для совместимости';
+  else if(key==='helloworld') $("ocrConfigStatus").textContent='OCR: Engine 2 → Engine 3';
+  else $("ocrConfigStatus").textContent='OCR: Engine 2 → Engine 3 • ваш OCR.space API-ключ';
 }
 function setProgress(v){ $('ocrBar').style.width=Math.max(0,Math.min(100,v))+'%'; }
 function setFileProgress(v){ const el=$("fileBar"); if(el) el.style.width=Math.max(0,Math.min(100,v))+'%'; }
@@ -1959,9 +1972,6 @@ async function fileToJpeg(file,maxSide=1800,quality=.76,maxBytes=900*1024){
     img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Не удалось открыть изображение'))};
     img.src=url;
   });
-}
-async function fileToGeminiJpeg(file){
-  return fileToJpeg(file,2000,.84,1800*1024);
 }
 function fetchWithTimeout(url,options={},timeoutMs=35000){
   const controller=new AbortController();
@@ -2191,196 +2201,56 @@ async function imageToJpegBlob(file,maxWidth=2400,maxHeight=1900,quality=.88){
     img.src=url;
   });
 }
-async function makeVisionTiles(file){
-  const base=await imageToJpegBlob(file,2400,1900,.88);
-  const img=await new Promise((resolve,reject)=>{
-    const el=new Image(),url=URL.createObjectURL(base.blob);
-    el.onload=()=>{URL.revokeObjectURL(url);resolve(el)};
-    el.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("Не удалось подготовить фрагменты фото"))};
-    el.src=url;
-  });
-  // Для длинных/широких таблиц анализируем перекрывающиеся фрагменты.
-  // Это повышает шанс увидеть мелкие отметки слева/справа от тега и не ломает
-  // обычные короткие фото: для них остаётся один запрос.
-  const W=base.width,H=base.height;
-  if(W<=1900 && H<=1500)return [base.blob];
-  const tileW=Math.min(1700,W),tileH=Math.min(1450,H),overlap=180;
-  const xs=W<=tileW?[0]:[0,Math.max(0,W-tileW)];
-  const ys=H<=tileH?[0]:[0,Math.max(0,H-tileH)];
-  const tiles=[];
-  for(const y of [...new Set(ys)]) for(const x of [...new Set(xs)]){
-    const w=Math.min(tileW,W-x),h=Math.min(tileH,H-y);
-    const c=document.createElement("canvas");c.width=w;c.height=h;
-    const ctx=c.getContext("2d",{alpha:false});ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
-    ctx.drawImage(img,x,y,w,h,0,0,w,h);
-    const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",.9));
-    if(blob)tiles.push(blob);
-    if(tiles.length>=6)break;
-  }
-  return tiles.length?tiles:[base.blob];
-}
-async function blobToBase64(blob){
-  return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-    reader.onload=()=>{const v=String(reader.result||"");resolve(v.includes(",")?v.split(",")[1]:v)};
-    reader.onerror=()=>reject(new Error("Не удалось подготовить фото для Gemini"));
-    reader.readAsDataURL(blob);
-  });
-}
-async function analyzeGeminiTile(blob,tags,apiKey){
-  const base64=await blobToBase64(blob);
-  const knownBlock=tags.length?`\nТеги, которые уже есть в текущем списке. Используй их как подсказку для исправления одной явной OCR-ошибки, но НЕ ограничивай распознавание только ими:\n${tags.join(", ")}`:'';
-  const prompt=`Ты анализируешь ФОТОГРАФИЮ ТАБЛИЦЫ КИП. Работай ПОСТРОЧНО: одна строка списка/таблицы/рукописной записи = один или несколько тегов. Фото может быть печатным, рукописным или смешанным.
-
-Найди ВСЕ чётко читаемые теги формата 4 цифры + код прибора 2–8 букв + номер 2–4 цифры + необязательная буква, например 2161-FT-200.
-Не выдумывай теги. Если символ не читается уверенно, лучше пропусти его. Если в одной записи указан общий базовый тег и несколько суффиксов A/B/C (например 450A, 450B, 450C или «450 A,B,C»), создай отдельный объект для каждого явно указанного суффикса.
-${knownBlock}
-
-ОПРЕДЕЛЕНИЕ ВЫПОЛНЕНИЯ — КРИТИЧЕСКИ ВАЖНО:
-- completed=true ТОЛЬКО при наличии ВИДИМОГО признака именно у этой строки: ✓/✔/☑, зачёркивание тега, X/Х, V, явный плюс/минус/ноль/кружок или другая явная ручная отметка.
-- Признак может быть слева от тега, справа, между колонками, над/под строкой или в отдельной узкой колонке, но должен совпадать с этой строкой ПО ВЕРТИКАЛЬНОЙ ПОЗИЦИИ.
-- Если тег зачёркнут, это сильное доказательство completed=true.
-- Не считай отметкой обычный дефис внутри тега, линии таблицы, границы ячеек, стрелки интерфейса, номера строк, единицы измерения, печатные символы шаблона или знак «+/-» в названии/описании.
-- Если есть сомнение, completed=false. Ложное выполнение хуже пропуска отметки.
-- Верни evidence только если реально виден признак; иначе пустую строку.
-
-ОПРЕДЕЛЕНИЕ ЗАДАНИЯ:
-- task заполняй ТОЛЬКО если рядом с конкретной строкой видна запись/примечание, явно относящаяся к этому тегу.
-- Учитывай рукописный и печатный текст, включая короткие пометки вроде «фото», «устранено», «нет приборов», если они относятся к этой строке. Не удаляй технические слова только потому, что они короткие.
-- Примеры: «сенсор оборван», «заменить датчик», «нет связи HART».
-- Не придумывай текст и не расширяй смысл.
-- Если связь записи с тегом сомнительна, task пустой.
-- Если task и completed относятся к одной строке, верни оба.
-
-ПРОСТРАНСТВЕННОЕ СОПОСТАВЛЕНИЕ:
-- Сначала определи границы строки тега, затем ищи отметку и task внутри той же горизонтальной полосы.
-- Не переносись на соседнюю строку только потому, что символ визуально близко.
-- Для отметки справа используй ту же строку, а не строку выше/ниже.
-- Сохраняй порядок строк сверху вниз и слева направо.
-
-ВАЖНО:
-- Не объединяй соседние строки в один тег.
-- Один объект = один тег.
-- Если тег читается неуверенно, пропусти его.
-
-Верни только JSON. Каждый объект: tag, confidence (0..1), completed (true/false), evidence (кратко: например "check-right", "strike", "plus-left", "dash-right", или пусто), task (строка или пусто), taskEvidence (например "same-row-note" или пусто).`;
-  const schema={type:"object",properties:{candidates:{type:"array",maxItems:80,items:{type:"object",properties:{tag:{type:"string"},confidence:{type:"number",minimum:0,maximum:1},completed:{type:"boolean"},evidence:{type:"string",maxLength:40},task:{type:"string",maxLength:180},taskEvidence:{type:"string",maxLength:30}},required:["tag","confidence","completed","evidence","task","taskEvidence"],additionalProperties:false}}},required:["candidates"],additionalProperties:false};
-  const body={contents:[{parts:[{text:prompt},{inline_data:{mime_type:"image/jpeg",data:base64}}]}],generationConfig:{temperature:0,responseMimeType:"application/json",responseJsonSchema:schema}};
-  const r=await fetchWithTimeout("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+encodeURIComponent(apiKey),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)},45000);
-  if(!r.ok){let detail="";try{const e=await r.json();detail=e?.error?.message||""}catch(_){}throw new Error(`Gemini HTTP ${r.status}${detail?": "+detail:""}`)}
-  const out=await r.json();
-  const text=out?.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
-  if(!text)throw new Error("Gemini не вернул результат");
-  let parsed;try{parsed=JSON.parse(text)}catch(_){throw new Error("Gemini вернул некорректный JSON")}
-  return Array.isArray(parsed?.candidates)?parsed.candidates:[];
-}
-async function runGeminiVision(image){
-  const apiKey=localStorage.getItem("kipGeminiApiKey")||"";
-  if(!apiKey)throw new Error("Не указан API-ключ Gemini");
-  const tags=[...new Set(knownTags().map(x=>String(x).trim().toUpperCase()).filter(Boolean))];
-  const tiles=await makeVisionTiles(image);
-  setProgress(25);
-  const results=new Array(tiles.length);
-  // Длинные фото могут разбиваться на несколько фрагментов. Два параллельных
-  // запроса заметно сокращают ожидание, но не создают лишнюю нагрузку на телефон/сеть.
-  let cursor=0;
-  async function worker(){
-    while(true){
-      const i=cursor++;
-      if(i>=tiles.length)return;
-      setProgress(25+Math.round((i/tiles.length)*55));
-      results[i]=await analyzeGeminiTile(tiles[i],tags,apiKey).catch(e=>({__error:e}));
-    }
-  }
-  await Promise.all(Array.from({length:Math.min(2,tiles.length)},()=>worker()));
-  setProgress(80);
-  const errors=results.filter(x=>x?.__error).map(x=>x.__error);
-  const raw=results.flatMap(x=>Array.isArray(x)?x:[]);
-  if(!raw.length)throw(errors[0]||new Error("Gemini не нашёл теги"));
-  const known=tags.map(x=>tagKey(x));
-  const merged=new Map();
-  for(const x of raw){
-    const rawTag=String(x?.tag||"").trim().toUpperCase();
-    if(!rawTag)continue;
-    const canonical=canonicalTag(rawTag);
-    if(!canonical)continue;
-    const exactKnown=known.includes(tagKey(canonical));
-    const matched=exactKnown?tags[known.indexOf(tagKey(canonical))]:fuzzyKnownTag(canonical);
-    const finalTag=matched||canonical;
-    const score=Number(x?.confidence),scoreSafe=Number.isFinite(score)?Math.max(0,Math.min(1,score)):0;
-    // Не принимаем слабые догадки. Для точного существующего тега допускаем немного меньший порог.
-    if(scoreSafe < (exactKnown?.40:.58))continue;
-    const key=tagKey(finalTag),task=String(x?.task||"").trim().replace(/\s+/g," ").slice(0,180);
-    const evidence=String(x?.evidence||"").trim().slice(0,40);
-    const taskEvidence=String(x?.taskEvidence||"").trim().slice(0,30);
-    const completed=Boolean(x?.completed) && !!evidence;
-    const safeTask=task && taskEvidence ? task : "";
-    const candidate={tag:finalTag,score:scoreSafe,completed,task:safeTask,evidence,taskEvidence};
-    const prev=merged.get(key);
-    if(!prev)merged.set(key,candidate);
-    else merged.set(key,{tag:finalTag,score:Math.max(prev.score,candidate.score),completed:prev.completed||completed,task:prev.task||safeTask,evidence:prev.evidence||evidence,taskEvidence:prev.taskEvidence||taskEvidence});
-  }
-  const unique=[...merged.values()];
-  if(!unique.length)throw new Error("Gemini не подтвердил читаемые теги");
-  ocrCandidates=unique.map(x=>x.tag);
-  ocrCandidateMeta=new Map(unique.map(x=>[tagKey(x.tag),{completed:x.completed,task:x.task,score:x.score,evidence:x.evidence||"",taskEvidence:x.taskEvidence||""}]));
-  window.kipGeminiCandidates=unique;
-  setProgress(100);
-  return unique;
-}
 async function runOCR(file){
   const runToken=++ocrRunToken;
-  $("ocrProgressWrap").style.display="block"; setProgress(5);
+  $("ocrProgressWrap").style.display="block";
+  setProgress(5);
   try{
     $("ocrStatus").textContent="Подготавливаю фото…";
-    const geminiKey=localStorage.getItem('kipGeminiApiKey')||'';
-    if(geminiKey){
-      try{
-        const geminiImage=await fileToGeminiJpeg(file);
-        if(runToken!==ocrRunToken)return;
-        $("ocrStatus").textContent="Gemini Vision: читаю КИП-теги на фото…";
-        setProgress(28);
-        const ranked=await runGeminiVision(geminiImage);
-        if(runToken!==ocrRunToken)return;
-        setProgress(100);
-        const best=ranked[0];
-        $("ocrStatus").textContent=`Gemini Vision: найдено кандидатов ${ranked.length}. Лучший ${best.tag} (${(best.score*100).toFixed(0)}%). Проверь перед добавлением.`;
-        renderImportCandidates();
-        return;
-      }catch(e){
-        if(runToken!==ocrRunToken)return;
-        console.warn('Gemini failed, falling back to OCR.space',e);
-        $("ocrStatus").textContent=`Gemini не сработал (${e.message}). Переключаюсь на резервный OCR…`;
-        setProgress(20);
-      }
-    }
-
     ocrCandidateMeta=new Map();
     const image=await fileToJpeg(file,1800,.76,900*1024);
     if(runToken!==ocrRunToken)return;
+
     const key=localStorage.getItem('kipOcrSpaceKey')||'helloworld';
-    const localPage = location.protocol === 'file:' || location.origin === 'null' || /android\.fileexplorer\.myprovider/i.test(location.origin);
+    const localPage=location.protocol==='file:' || location.origin==='null' || /android\.fileexplorer\.myprovider/i.test(location.origin);
     if(localPage){
-      $("ocrStatus").textContent=geminiKey
-        ? "Gemini не сработал. Резервный OCR недоступен для локального файла — открой страницу через HTTPS."
-        : "Gemini не настроен. Для распознавания открой страницу через HTTPS и настрой Gemini.";
+      $("ocrStatus").textContent="OCR недоступен для локального файла — открой страницу через HTTPS.";
       setProgress(0);
       return;
     }
+
     let lastError=null;
     for(const engine of ['2','3']){
       try{
-        $("ocrStatus").textContent=engine==='2' ? "Резерв: OCR.space Engine 2…" : "Engine 2 не нашёл теги — пробую Engine 3…";
-        setProgress(engine==='2'?25:42);
+        $("ocrStatus").textContent=engine==='2' ? "OCR.space Engine 2: распознаю…" : "Engine 2 не дал тегов — пробую Engine 3…";
+        setProgress(engine==='2'?25:52);
         const fd=new FormData();
-        fd.append('file',image,'kip-photo.jpg'); fd.append('apikey',key); fd.append('language','auto'); fd.append('OCREngine',engine); fd.append('isTable','true'); fd.append('detectOrientation','true'); fd.append('scale','true'); fd.append('isOverlayRequired','false');
+        fd.append('file',image,'kip-photo.jpg');
+        fd.append('apikey',key);
+        fd.append('language','auto');
+        fd.append('OCREngine',engine);
+        fd.append('isTable','true');
+        fd.append('detectOrientation','true');
+        fd.append('scale','true');
+        fd.append('isOverlayRequired','false');
+
         const r=await fetchWithTimeout('https://api.ocr.space/parse/image',{method:'POST',body:fd},engine==='2'?20000:30000);
         if(!r.ok)throw new Error(`OCR.space HTTP ${r.status}`);
-        setProgress(engine==='3'?72:82); const out=await r.json();
-        if(out.IsErroredOnProcessing) throw new Error(out.ErrorMessage||out.ErrorDetails||'OCR.space error');
+        setProgress(engine==='3'?78:72);
+        const out=await r.json();
+        if(out.IsErroredOnProcessing)throw new Error(out.ErrorMessage||out.ErrorDetails||'OCR.space error');
         const text=(out.ParsedResults||[]).map(x=>x.ParsedText||'').join('\n');
         const records=extractTagRecordsFromText(text);
-        ocrCandidates=records.length?records.map(x=>x.tag):extractTagsSmart(text);
+        const candidates=records.length?records.map(x=>x.tag):extractTagsSmart(text);
+
+        // Важно: успешный HTTP-ответ без распознанных тегов НЕ считается успехом.
+        // В этом случае обязательно продолжаем с Engine 3.
+        if(!candidates.length){
+          lastError=new Error(`Engine ${engine} не нашёл КИП-теги`);
+          continue;
+        }
+
+        ocrCandidates=[...new Set(candidates)];
         ocrCandidateMeta=new Map(records.map(x=>[tagKey(x.tag),{completed:!!x.done,task:x.task||"",score:0.65}]));
         if(runToken!==ocrRunToken)return;
         setProgress(100);
@@ -2389,14 +2259,16 @@ async function runOCR(file){
         return;
       }catch(e){
         lastError=e;
+        if(runToken!==ocrRunToken)return;
         if(engine==='2')continue;
       }
     }
-    throw lastError||new Error('Резервный OCR не ответил');
+    throw lastError||new Error('OCR.space Engine 2 и Engine 3 не ответили');
   }catch(e){
     if(runToken!==ocrRunToken)return;
-    console.error(e); setProgress(0);
-    $("ocrStatus").textContent=`Ошибка распознавания: ${e.message||e}. Проверь интернет и настройки Gemini.`;
+    console.error(e);
+    setProgress(0);
+    $("ocrStatus").textContent=`Ошибка распознавания: ${e.message||e}. Проверь интернет и OCR.space API-ключ.`;
   }
 }
 function renderImportCandidates(){
@@ -2756,7 +2628,6 @@ $("closeBtn").onclick=closeModal;
 $("cameraChoice").onclick=()=>{setAddMode("camera"); setTimeout(()=>$("cameraInput").click(),50);};
 $("photoChoice").onclick=()=>{setAddMode("photo"); setTimeout(()=>$("photoInput").click(),50);};
 $("fileChoice").onclick=()=>setAddMode("file");
-$("configureGeminiBtn").onclick=configureOcr;
 $("ocrBackBtn").onclick=()=>{
   $("importList").innerHTML=""; $("importActions").style.display="none"; ocrCandidateMeta=new Map();
   $("ocrStatus").textContent=""; $("ocrProgressWrap").style.display="none";
@@ -2804,26 +2675,32 @@ $("duplicateOverlay").addEventListener("click",e=>{if(e.target===$("duplicateOve
 $("saveBtn").onclick=saveModal;
 deleteBtn.onclick=deleteCurrent;
 overlay.addEventListener("click",e=>{if(e.target===overlay)closeModal();});
-$("deleteAll").onclick=async()=>{
+$("deleteAll").onclick=()=>{
   if(selectionMode){
     const ids=[...selectedTagIds];
     if(!ids.length){showToast("Выбери теги для удаления");return;}
-    const count=ids.length;
-    if(await askConfirm(`Удалить выбранные теги: ${count}?`,"Удаление выбранных тегов","Удалить")){
-      const set=new Set(ids);
-      data=data.filter(item=>!set.has(item.id));
-      selectedTagIds.clear();selectionMode=false;document.body.classList.remove("selection-mode-active");
-      save();filter="all";updateSelectionFooter();render();showToast(`Удалено тегов: ${count}`);
-    }
+    const set=new Set(ids);
+    data=data.filter(item=>!set.has(item.id));
+    selectedTagIds.clear();
+    selectionMode=false;
+    document.body.classList.remove("selection-mode-active");
+    save();
+    filter="all";
+    updateSelectionFooter();
+    render();
+    showToast(`Удалено тегов: ${ids.length}`);
     return;
   }
-  if(await askConfirm("Удалить ВЕСЬ список? Все позиции, включая добавленные и отредактированные, будут удалены.","Удаление тегов","Удалить")){
-    data=[];save();filter="all";render();showToast("Все теги удалены");
-  }
+  const count=data.length;
+  if(!count){showToast("Список уже пуст");return;}
+  data=[];
+  save();
+  filter="all";
+  render();
+  showToast(`Удалено тегов: ${count}`);
 };
-$("clearChecks").onclick=async()=>{
-  // В режиме выборки эта же кнопка управляет ТОЛЬКО выбором для копирования/удаления.
-  // Статус «Выполнено» при этом вообще не изменяется.
+$("clearChecks").onclick=()=>{
+  // В режиме выборки кнопка работает только с выбором тегов.
   if(selectionMode){
     const total=data.length;
     if(!total){showToast("На странице нет тегов");return;}
@@ -2842,13 +2719,14 @@ $("clearChecks").onclick=async()=>{
     return;
   }
 
-  // В обычном режиме кнопка сохраняет прежнюю функцию:
-  // снимает только статус «Выполнено».
+  // В обычном режиме кнопка сразу снимает статус «Выполнено».
   const marked=data.filter(item=>item.done).length;
   if(!marked){showToast("Отметок для сброса нет");return;}
-  if(await askConfirm(`Снять отметки «Выполнено» у ${marked} позиций?`,"Снять отметки","Снять")){
-    data.forEach(item=>item.done=false);save();filter="all";render();showToast("Все отметки сняты");
-  }
+  data.forEach(item=>item.done=false);
+  save();
+  filter="all";
+  render();
+  showToast(`Сняты отметки: ${marked}`);
 };
 document.addEventListener("selectstart",e=>{
   if(e.target.closest("input,textarea,select,[contenteditable=true]")) return;

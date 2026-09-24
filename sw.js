@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kip-checklist-v66-shell';
+const CACHE_NAME = 'kip-checklist-v67-1-shell';
 const APP_SHELL = [
   './',
   './index.html',
