@@ -2763,7 +2763,6 @@ window.addEventListener("orientationchange",()=>requestAnimationFrame(refreshAft
 window.addEventListener("resize",()=>{ if(Math.abs((window.innerWidth||0)-((window.visualViewport&&window.visualViewport.width)||window.innerWidth))>2) return; refreshAfterViewportChange(); },{passive:true});
 if(window.visualViewport) window.visualViewport.addEventListener("resize",refreshAfterViewportChange,{passive:true});
 
-<<<<<<< HEAD
 // PWA installation.
 // Chromium-based browsers can provide the native install prompt via beforeinstallprompt.
 // iOS does not expose that event: the button gives the native Safari/Chrome installation path.
@@ -2829,34 +2828,4 @@ window.addEventListener("appinstalled",hideInstallButton);
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>{
     navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).catch(()=>{});
-=======
-// PWA installation: Chromium may expose a native install prompt.
-// Safari/iOS keeps its normal "Add to Home Screen" browser flow.
-let deferredInstallPrompt=null;
-const installAppBtn=$("installApp");
-window.addEventListener("beforeinstallprompt",event=>{
-  event.preventDefault();
-  deferredInstallPrompt=event;
-  if(installAppBtn) installAppBtn.hidden=false;
-});
-if(installAppBtn){
-  installAppBtn.onclick=async()=>{
-    if(!deferredInstallPrompt)return;
-    const promptEvent=deferredInstallPrompt;
-    deferredInstallPrompt=null;
-    try{
-      await promptEvent.prompt();
-      await promptEvent.userChoice;
-      installAppBtn.hidden=true;
-    }catch(_){}
-  };
-}
-window.addEventListener("appinstalled",()=>{
-  deferredInstallPrompt=null;
-  if(installAppBtn) installAppBtn.hidden=true;
-});
-
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>{
-    navigator.serviceWorker.register("./sw.js").catch(()=>{});
->>>>>>> 072ed5b8c9b66b69101e45cac71e0f071c18663f
+8663f
