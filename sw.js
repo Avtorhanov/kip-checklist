@@ -29,8 +29,6 @@ self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET') return;
 
-  // HTML navigation is network-first so a new index.html is not trapped
-  // indefinitely in the previous service-worker cache.
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request).then(response => {

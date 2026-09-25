@@ -2766,35 +2766,69 @@ window.addEventListener("orientationchange",()=>requestAnimationFrame(refreshAft
 window.addEventListener("resize",()=>{ if(Math.abs((window.innerWidth||0)-((window.visualViewport&&window.visualViewport.width)||window.innerWidth))>2) return; refreshAfterViewportChange(); },{passive:true});
 if(window.visualViewport) window.visualViewport.addEventListener("resize",refreshAfterViewportChange,{passive:true});
 
-// PWA installation: Chromium may expose a native install prompt.
-// Safari/iOS keeps its normal "Add to Home Screen" browser flow.
+// PWA installation: use the native prompt when Chromium exposes it.
+// If the browser does not expose beforeinstallprompt, the same button gives
+// the browser's correct manual installation path instead of doing nothing.
 let deferredInstallPrompt=null;
 const installAppBtn=$("installApp");
+
+function isStandaloneApp(){
+  return window.matchMedia?.("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+}
+function hideInstallButton(){
+  deferredInstallPrompt=null;
+  if(installAppBtn) installAppBtn.hidden=true;
+}
+function showInstallFallback(){
+  const ua=navigator.userAgent||"";
+  const isiOS=/iPhone|iPad|iPod/i.test(ua) ||
+    (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+  if(isiOS){
+    showToast("На iPhone: «Поделиться» → «На экран „Домой“»");
+  }else{
+    showToast("Открой меню браузера и выбери «Установить приложение»");
+  }
+}
+
+if(installAppBtn && isStandaloneApp()) hideInstallButton();
+
 window.addEventListener("beforeinstallprompt",event=>{
   event.preventDefault();
   deferredInstallPrompt=event;
-  if(installAppBtn) installAppBtn.hidden=false;
+  if(installAppBtn && !isStandaloneApp()) installAppBtn.hidden=false;
 });
+
 if(installAppBtn){
   installAppBtn.onclick=async()=>{
-    if(!deferredInstallPrompt)return;
+    if(isStandaloneApp()){
+      hideInstallButton();
+      return;
+    }
+    if(!deferredInstallPrompt){
+      showInstallFallback();
+      return;
+    }
     const promptEvent=deferredInstallPrompt;
     deferredInstallPrompt=null;
     try{
       await promptEvent.prompt();
-      await promptEvent.userChoice;
       installAppBtn.hidden=true;
-    }catch(_){}
+      await promptEvent.userChoice;
+    }catch(_){
+      if(!isStandaloneApp()) installAppBtn.hidden=false;
+    }
   };
 }
+
 window.addEventListener("appinstalled",()=>{
-  deferredInstallPrompt=null;
-  if(installAppBtn) installAppBtn.hidden=true;
+  hideInstallButton();
+  showToast("Tag list добавлен на главный экран");
 });
 
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>{
-    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+    navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).catch(()=>{});
   });
 }
 
