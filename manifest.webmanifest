@@ -1,6 +1,6 @@
 {
-  "name": "КИП-чеклист",
-  "short_name": "КИП-чек",
+  "name": "Tag list",
+  "short_name": "Tag list",
   "lang": "ru",
   "description": "Чек-лист КИП для инженера",
   "id": "./",
